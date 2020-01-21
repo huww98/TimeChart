@@ -1,0 +1,30 @@
+{
+    "name": "timechart",
+    "version": "0.0.1",
+    "description": "An chart library specialized for large-scale time-series data, built on WebGL",
+    "main": "dist/timechart.umd.js",
+    "module": "dist/timechart.es5.js",
+    "types": "dist/types/index.d.ts",
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "demo": "python3 -m http.server -d demo",
+        "build": "tsc && rollup -c",
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "author": "huww98",
+    "license": "MIT",
+    "dependencies": {
+        "gl-matrix": "^3.1.0",
+        "tslib": "^1.10.0"
+    },
+    "devDependencies": {
+        "@rollup/plugin-commonjs": "^11.0.1",
+        "@rollup/plugin-node-resolve": "^7.0.0",
+        "@rollup/plugin-typescript": "^2.1.0",
+        "@types/gl-matrix": "^2.4.5",
+        "rollup": "^1.29.1",
+        "typescript": "^3.7.5"
+    }
+}

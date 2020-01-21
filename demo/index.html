@@ -10,11 +10,23 @@
         width: 960px;
         height: 640px;
     }
+    #size-ref {
+        display: inline-block;
+        width: 100px;
+        color: white;
+        background: black;
+    }
     </style>
 </head>
 <body>
     <canvas id="chart"></canvas>
-    <script src="https://cdn.bootcss.com/gl-matrix/2.8.1/gl-matrix.js"></script>
+    <p>
+        <span id="size-ref" style="height: 10px;"></span> 10px
+    </p>
+    <p>
+        <span id="size-ref" style="height: 20px;"></span> 20px
+    </p>
+    <script src="../dist/timechart.umd.js"></script>
     <script src="./demo.js"></script>
 </body>
 </html>

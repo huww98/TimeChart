@@ -3,7 +3,12 @@ class Axis {
     public max = 1;
 }
 
-interface DataPoint {
+export interface DataSeries {
+    name: string;
+    data: DataPoint[];
+}
+
+export interface DataPoint {
     x: number;
     y: number;
 }
@@ -11,5 +16,5 @@ interface DataPoint {
 export class RenderModel {
     public xAxis = new Axis();
     public yAxis = new Axis();
-    public dataPoints = [] as DataPoint[];
+    public series = [] as DataSeries[];
 }

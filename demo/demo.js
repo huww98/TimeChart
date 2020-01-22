@@ -12,5 +12,19 @@ function main() {
     }
 
     const chart = new timeChart.TimeChart(gl);
+
+    function update() {
+        chart.renderModel.dataPoints.length = 0;
+        for (let x = 0; x < 960; x += 0.01) {
+            const y = Math.random() * 500 + 100;
+            chart.renderModel.dataPoints.push({ x, y });
+        }
+        chart.update();
+
+        requestAnimationFrame(update);
+    }
+    requestAnimationFrame(update);
+    // update()
+
     console.log(gl.getError());
 }

@@ -71,6 +71,8 @@ const BYTES_PER_POINT = INDEX_PER_POINT * Float32Array.BYTES_PER_ELEMENT
 
 export class LineChartRenderer {
     private program = new LineChartWebGLProgram(this.gl)
+    dataBuffer: WebGLBuffer;
+
     constructor(
         private model: RenderModel,
         private gl: WebGL2RenderingContext,
@@ -101,8 +103,8 @@ export class LineChartRenderer {
         gl.enableVertexAttribArray(VertexAttribLocations.NEXT_SIDE)
         gl.vertexAttribPointer(VertexAttribLocations.NEXT_SIDE, 1, gl.FLOAT, false, posArrayStride, 2 * Float32Array.BYTES_PER_ELEMENT)
 
-        const dataBuffer = throwIfFalsy(gl.createBuffer());
-        gl.bindBuffer(gl.ARRAY_BUFFER, dataBuffer);
+        this.dataBuffer = throwIfFalsy(gl.createBuffer());
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.dataBuffer);
 
         gl.enableVertexAttribArray(VertexAttribLocations.DATA_POINT_CURRENT);
         gl.vertexAttribPointer(VertexAttribLocations.DATA_POINT_CURRENT, 2, gl.FLOAT, false, BYTES_PER_POINT, 0);
@@ -116,16 +118,7 @@ export class LineChartRenderer {
         gl.vertexAttribPointer(VertexAttribLocations.DATA_POINT_NEXT_2, 2, gl.FLOAT, false, BYTES_PER_POINT, 4 * Float32Array.BYTES_PER_ELEMENT);
         gl.vertexAttribDivisor(VertexAttribLocations.DATA_POINT_NEXT_2, 1);
 
-        const dataArray = new Float32Array(model.dataPoints.length * INDEX_PER_POINT);
-        for (let i = 0; i < model.dataPoints.length; i++) {
-            const ai = i * INDEX_PER_POINT;
-            const data = model.dataPoints[i];
-            dataArray[ai] = data.x;
-            dataArray[ai + 1] = data.y;
-        }
-
         gl.clearColor(0.0, 0.0, 0.0, 1.0);
-        gl.clear(gl.COLOR_BUFFER_BIT);
         const scale = vec2.fromValues(960.0, 640.0)
         vec2.divide(scale, scale, [2, 2])
         vec2.inverse(scale, scale)
@@ -150,15 +143,26 @@ export class LineChartRenderer {
             modelViewMatrix);
         gl.uniform1f(
             this.program.locations.uLineWidth,
-            0.5,
+            0.05,
         )
+    }
 
-        gl.bindBuffer(gl.ARRAY_BUFFER, dataBuffer);
+    drawFrame() {
+        const gl = this.gl;
+        const dataArray = new Float32Array(this.model.dataPoints.length * INDEX_PER_POINT);
+        for (let i = 0; i < this.model.dataPoints.length; i++) {
+            const ai = i * INDEX_PER_POINT;
+            const data = this.model.dataPoints[i];
+            dataArray[ai] = data.x;
+            dataArray[ai + 1] = data.y;
+        }
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.dataBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, dataArray, gl.STATIC_DRAW);
-        gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 6, model.dataPoints.length - 2);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 6, this.model.dataPoints.length - 2);
 
         // Last segment
-        gl.bufferData(gl.ARRAY_BUFFER, dataArray.slice(dataArray.length - 4), gl.STATIC_DRAW);
-        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+        // gl.bufferData(gl.ARRAY_BUFFER, dataArray.slice(dataArray.length - 4), gl.STATIC_DRAW);
+        // gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     }
 }

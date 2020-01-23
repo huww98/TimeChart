@@ -230,31 +230,17 @@ export class LineChartRenderer {
         private model: RenderModel,
         private gl: WebGL2RenderingContext,
     ) {
-        const scale = vec2.fromValues(960.0, 640.0)
-        vec2.divide(scale, scale, [2, 2])
-        vec2.inverse(scale, scale)
-
-        const translate = mat4.create();
-        mat4.fromTranslation(translate, [-1.0, -1.0, 0.0])
-
-        const projectionMatrix = mat4.create();
-        mat4.fromScaling(projectionMatrix, [...scale, 1.0]);
-        mat4.multiply(projectionMatrix, translate, projectionMatrix)
-
         const modelViewMatrix = mat4.create();
 
         this.program.use();
-        gl.uniformMatrix4fv(
-            this.program.locations.uProjectionMatrix,
-            false,
-            projectionMatrix);
+
         gl.uniformMatrix4fv(
             this.program.locations.uModelViewMatrix,
             false,
             modelViewMatrix);
         gl.uniform1f(
             this.program.locations.uLineWidth,
-            0.05,
+            0.5,
         )
     }
 
@@ -267,6 +253,25 @@ export class LineChartRenderer {
             }
             a.syncBuffer();
         }
+    }
+
+    onResize(width: number, height: number) {
+        const scale = vec2.fromValues(width, height)
+        vec2.divide(scale, scale, [2, 2])
+        vec2.inverse(scale, scale)
+
+        const translate = mat4.create();
+        mat4.fromTranslation(translate, [-1.0, -1.0, 0.0])
+
+        const projectionMatrix = mat4.create();
+        mat4.fromScaling(projectionMatrix, [...scale, 1.0]);
+        mat4.multiply(projectionMatrix, translate, projectionMatrix)
+
+        const gl = this.gl;
+        gl.uniformMatrix4fv(
+            this.program.locations.uProjectionMatrix,
+            false,
+            projectionMatrix);
     }
 
     drawFrame() {

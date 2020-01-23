@@ -1,10 +1,12 @@
+import { TimeChartSeriesOptions } from './options';
+
 class Axis {
     public min = 0;
     public max = 1;
 }
 
 export interface DataSeries {
-    name: string;
+    options: TimeChartSeriesOptions;
     data: DataPoint[];
 }
 

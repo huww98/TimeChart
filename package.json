@@ -3,8 +3,8 @@
     "version": "0.0.1",
     "description": "An chart library specialized for large-scale time-series data, built on WebGL.",
     "repository": {
-      "url": "https://github.com/huww98/TimeChart.git",
-      "type": "git"
+        "url": "https://github.com/huww98/TimeChart.git",
+        "type": "git"
     },
     "main": "dist/timechart.umd.js",
     "module": "dist/timechart.es5.js",
@@ -13,13 +13,15 @@
         "dist"
     ],
     "scripts": {
-        "demo": "python3 -m http.server -d demo",
+        "demo": "echo \"Visit http://localhost:8080/demo/index.html\" && http-server",
         "build": "tsc && rollup -c",
+        "start": "rollup -c -w",
         "test": "echo \"Error: no test specified\" && exit 1"
     },
-    "author": "huww98",
+    "author": "huww98 <huww98@outlook.com>",
     "license": "MIT",
     "dependencies": {
+        "d3-color": "^1.4.0",
         "gl-matrix": "^3.1.0",
         "tslib": "^1.10.0"
     },
@@ -27,7 +29,9 @@
         "@rollup/plugin-commonjs": "^11.0.1",
         "@rollup/plugin-node-resolve": "^7.0.0",
         "@rollup/plugin-typescript": "^2.1.0",
+        "@types/d3-color": "^1.2.2",
         "@types/gl-matrix": "^2.4.5",
+        "http-server": "^0.12.1",
         "rollup": "^1.29.1",
         "typescript": "^3.7.5"
     }

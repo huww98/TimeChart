@@ -5,9 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>TimeChart Demo</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
     <style>
     #chart {
-        width: 960px;
+        width: 100%;
         height: 640px;
     }
     #size-ref {
@@ -16,16 +17,23 @@
         color: white;
         background: black;
     }
+    .container {
+        padding: 0;
+    }
     </style>
 </head>
 <body>
-    <canvas id="chart"></canvas>
-    <p>
-        <span id="size-ref" style="height: 10px;"></span> 10px
-    </p>
-    <p>
-        <span id="size-ref" style="height: 20px;"></span> 20px
-    </p>
+    <div class="container">
+        <div id="chart"></div>
+        <p>
+            <span id="size-ref" style="height: 10px;"></span> 10px
+        </p>
+        <p>
+            <span id="size-ref" style="height: 20px;"></span> 20px
+        </p>
+    </div>
+
+    <script src="https://d3js.org/d3-color.v1.js"></script>
     <script src="../dist/timechart.umd.js"></script>
     <script src="./demo.js"></script>
 </body>

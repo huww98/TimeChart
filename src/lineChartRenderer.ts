@@ -1,6 +1,8 @@
+import { vec2, mat4 } from 'gl-matrix';
+
 import { RenderModel, DataPoint, DataSeries } from "./renderModel";
 import { LinkedWebGLProgram, throwIfFalsy } from './webGLUtils';
-import { vec2, mat4 } from 'gl-matrix';
+import { resolveColorRGBA } from './options';
 
 const enum VertexAttribLocations {
     DATA_POINT = 0,
@@ -24,10 +26,12 @@ void main() {
 const fsSource = `#version 300 es
 precision lowp float;
 
+uniform vec4 uColor;
+
 out vec4 outColor;
 
 void main() {
-    outColor = vec4(1.0, 1.0, 1.0, 1.0);
+    outColor = uColor;
 }
 `;
 
@@ -36,6 +40,7 @@ class LineChartWebGLProgram extends LinkedWebGLProgram {
         uModelViewMatrix: WebGLUniformLocation;
         uProjectionMatrix: WebGLUniformLocation;
         uLineWidth: WebGLUniformLocation;
+        uColor: WebGLUniformLocation;
     };
     constructor(gl: WebGLRenderingContext) {
         super(gl, vsSource, fsSource);
@@ -43,6 +48,7 @@ class LineChartWebGLProgram extends LinkedWebGLProgram {
             uModelViewMatrix: throwIfFalsy(gl.getUniformLocation(this.program, 'uModelViewMatrix')),
             uProjectionMatrix: throwIfFalsy(gl.getUniformLocation(this.program, 'uProjectionMatrix')),
             uLineWidth: throwIfFalsy(gl.getUniformLocation(this.program, 'uLineWidth')),
+            uColor: throwIfFalsy(gl.getUniformLocation(this.program, 'uColor')),
         }
     }
 }
@@ -276,7 +282,10 @@ export class LineChartRenderer {
 
     drawFrame() {
         this.syncBuffer();
-        for (const arr of this.arrays.values()) {
+        const gl = this.gl;
+        for (const [ds, arr] of this.arrays) {
+            const color = resolveColorRGBA(ds.options.color);
+            gl.uniform4fv(this.program.locations.uColor, color);
             arr.draw();
         }
     }

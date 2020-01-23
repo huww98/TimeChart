@@ -41,7 +41,6 @@ export class TimeChart {
         }
         const gl = ctx;
 
-
         const bgColor = resolveColorRGBA(resolvedOptions.backgroundColor);
         gl.clearColor(...bgColor);
 

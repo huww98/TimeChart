@@ -13,10 +13,16 @@ export interface TimeChartOptions {
     xRange: { min: number | Date, max: number | Date } | 'auto';
     yRange: { min: number, max: number } | 'auto';
     realTime: boolean;
+
+    /** Milliseconds since `new Date(0)`. Every x in data are relative to this.
+     *
+     * Set this option and keep the absolute value of x small for higher floating point precision.
+     **/
+    baseTime: number;
 }
 
 export interface TimeChartSeriesOptions {
-    lineWidth: number;
+    lineWidth?: number;
     name: string;
     color: ColorSpecifier;
 }

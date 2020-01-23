@@ -35,22 +35,26 @@ export class RenderModel {
     }
 
     update() {
+        const series = this.series.filter(s => s.data.length > 0);
+        if (series.length === 0) {
+            return;
+        }
         if (this.options.xRange === 'auto') {
-            const maxDomain = Math.max(...this.series.map(s => s.data[s.data.length - 1].x));
+            const maxDomain = this.options.baseTime + Math.max(...series.map(s => s.data[s.data.length - 1].x));
             const minDomain = this.xAutoInitized ?
                 this.xScale.domain()[0] :
-                Math.min(...this.series.map(s => s.data[0].x));
+                this.options.baseTime + Math.min(...series.map(s => s.data[0].x));
             this.xScale.domain([minDomain, maxDomain]);
             this.xAutoInitized = true;
         }
         if (this.options.yRange === 'auto') {
             let minDomain = Math.min(
-                ...this.series.map(s =>
+                ...series.map(s =>
                     Math.min(...s.data.slice(s.yRangeUpdatedIndex).map(d => d.y))
                 )
             );
             let maxDomain = Math.max(
-                ...this.series.map(s =>
+                ...series.map(s =>
                     Math.max(...s.data.slice(s.yRangeUpdatedIndex).map(d => d.y))
                 )
             );

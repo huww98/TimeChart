@@ -13,7 +13,7 @@
         "dist"
     ],
     "scripts": {
-        "demo": "http-server -c -1 -o /demo/index.html",
+        "demo": "http-server -c1 -o /demo/index.html",
         "build": "tsc && rollup -c",
         "start": "rollup -c -w",
         "test": "echo \"Error: no test specified\" && exit 1"

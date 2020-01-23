@@ -16,10 +16,10 @@ const defaultOptions: TimeChartOptions = {
     xRange: 'auto',
     yRange: 'auto',
     realTime: false,
+    baseTime: 0,
 };
 
 const defaultSeriesOptions: TimeChartSeriesOptions = {
-    lineWidth: 1,
     color: rgb(0, 0, 0, 1),
     name: '',
 };
@@ -42,7 +42,7 @@ export default class TimeChart {
         this.renderModel = new RenderModel(resolvedOptions);
         this.canvasLayer = new CanvasLayer(el, resolvedOptions);
         this.svgLayer = new SVGLayer(el, resolvedOptions, this.renderModel);
-        this.lineChartRenderer = new LineChartRenderer(this.renderModel, this.canvasLayer.gl);
+        this.lineChartRenderer = new LineChartRenderer(this.renderModel, this.canvasLayer.gl, resolvedOptions);
 
         this.onResize();
         window.addEventListener('resize', () => this.onResize());

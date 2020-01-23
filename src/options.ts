@@ -5,6 +5,14 @@ type ColorSpecifier = ColorSpaceObject | ColorCommonInstance | string
 export interface TimeChartOptions {
     lineWidth: number;
     backgroundColor: ColorSpecifier;
+    paddingLeft: number;
+    paddingRight: number;
+    paddingTop: number;
+    paddingBottom: number;
+
+    xRange: { min: number | Date, max: number | Date } | 'auto';
+    yRange: { min: number, max: number } | 'auto';
+    realTime: boolean;
 }
 
 export interface TimeChartSeriesOptions {

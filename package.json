@@ -13,7 +13,7 @@
         "dist"
     ],
     "scripts": {
-        "demo": "echo \"Visit http://localhost:8080/demo/index.html\" && http-server",
+        "demo": "http-server -c -1 -o /demo/index.html",
         "build": "tsc && rollup -c",
         "start": "rollup -c -w",
         "test": "echo \"Error: no test specified\" && exit 1"
@@ -21,7 +21,10 @@
     "author": "huww98 <huww98@outlook.com>",
     "license": "MIT",
     "dependencies": {
+        "d3-axis": "^1.0.12",
         "d3-color": "^1.4.0",
+        "d3-scale": "^3.2.1",
+        "d3-selection": "^1.4.1",
         "gl-matrix": "^3.1.0",
         "tslib": "^1.10.0"
     },
@@ -29,7 +32,10 @@
         "@rollup/plugin-commonjs": "^11.0.1",
         "@rollup/plugin-node-resolve": "^7.0.0",
         "@rollup/plugin-typescript": "^2.1.0",
+        "@types/d3-axis": "^1.0.12",
         "@types/d3-color": "^1.2.2",
+        "@types/d3-scale": "^2.1.1",
+        "@types/d3-selection": "^1.4.1",
         "@types/gl-matrix": "^2.4.5",
         "http-server": "^0.12.1",
         "rollup": "^1.29.1",

@@ -3,67 +3,63 @@ import { rgb } from 'd3-color';
 import { RenderModel, DataPoint } from './renderModel';
 import { LineChartRenderer } from './lineChartRenderer';
 import { TimeChartOptions, resolveColorRGBA, TimeChartSeriesOptions } from './options';
+import { CanvasLayer } from './canvasLayer';
+import { SVGLayer } from './svgLayer';
 
 const defaultOptions: TimeChartOptions = {
     lineWidth: 1,
-    backgroundColor: rgb(0, 0, 0, 1),
+    backgroundColor: rgb(255, 255, 255, 1),
+    paddingTop: 10,
+    paddingRight: 10,
+    paddingLeft: 45,
+    paddingBottom: 20,
+    xRange: 'auto',
+    yRange: 'auto',
+    realTime: false,
 };
 
 const defaultSeriesOptions: TimeChartSeriesOptions = {
     lineWidth: 1,
-    color: rgb(255, 255, 255, 1),
+    color: rgb(0, 0, 0, 1),
     name: '',
 };
 
 export default class TimeChart {
+    private options: TimeChartOptions;
     private renderModel: RenderModel;
     private lineChartRenderer: LineChartRenderer;
-    gl: WebGL2RenderingContext;
-    canvas: HTMLCanvasElement;
+
+    private canvasLayer: CanvasLayer;
+    private svgLayer: SVGLayer;
+
     constructor(private el: HTMLElement, options?: Partial<TimeChartOptions>) {
         const resolvedOptions = {
             ...defaultOptions,
             ...options,
         }
+        this.options = resolvedOptions;
 
-        const canvas = document.createElement('canvas');
-        canvas.style.width = '100%';
-        canvas.style.height = '100%';
-        el.appendChild(canvas);
+        this.renderModel = new RenderModel(resolvedOptions);
+        this.canvasLayer = new CanvasLayer(el, resolvedOptions);
+        this.svgLayer = new SVGLayer(el, resolvedOptions, this.renderModel);
+        this.lineChartRenderer = new LineChartRenderer(this.renderModel, this.canvasLayer.gl);
 
-        const scale = window.devicePixelRatio;
-        canvas.width = canvas.clientWidth * scale;
-        canvas.height = canvas.clientHeight * scale;
-
-        const ctx = canvas.getContext('webgl2');
-        if (!ctx) {
-            throw new Error('Unable to initialize WebGL. Your browser or machine may not support it.');
-        }
-        const gl = ctx;
-
-        const bgColor = resolveColorRGBA(resolvedOptions.backgroundColor);
-        gl.clearColor(...bgColor);
-
-        this.gl = gl;
-        this.canvas = canvas
-        this.renderModel = new RenderModel();
-        this.lineChartRenderer = new LineChartRenderer(this.renderModel, gl);
-        this.lineChartRenderer.onResize(canvas.clientWidth, canvas.clientHeight);
+        this.onResize();
         window.addEventListener('resize', () => this.onResize());
     }
 
     onResize() {
-        const scale = window.devicePixelRatio;
-        const canvas = this.canvas;
-        canvas.width = canvas.clientWidth * scale;
-        canvas.height = canvas.clientHeight * scale;
-        this.gl.viewport(0, 0, canvas.width, canvas.height);
+        const canvas = this.canvasLayer.canvas;
+        this.renderModel.onResize(canvas.clientWidth, canvas.clientHeight);
+        this.svgLayer.onResize();
+        this.canvasLayer.onResize();
         this.lineChartRenderer.onResize(canvas.clientWidth, canvas.clientHeight);
     }
 
     update() {
-        const gl = this.gl;
-        gl.clear(gl.COLOR_BUFFER_BIT);
+        this.canvasLayer.clear();
+        this.renderModel.update();
+        this.svgLayer.update();
         this.lineChartRenderer.drawFrame();
     }
 
@@ -75,6 +71,7 @@ export default class TimeChart {
         this.renderModel.series.push({
             data,
             options: resolvedOptions,
+            yRangeUpdatedIndex: 0,
         });
     }
 }

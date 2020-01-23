@@ -12,6 +12,9 @@ export default {
             file: pkg.main,
             globals: {
                 'd3-color': 'd3',
+                'd3-selection': 'd3',
+                'd3-scale': 'd3',
+                'd3-axis': 'd3',
             },
             name: 'TimeChart',
             format: 'umd',
@@ -19,7 +22,7 @@ export default {
         },
         { file: pkg.module, format: 'es', sourcemap: true },
     ],
-    external: ['d3-color'],
+    external: ['d3-color', 'd3-selection', 'd3-scale', 'd3-axis'],
     watch: {
         include: 'src/**',
     },

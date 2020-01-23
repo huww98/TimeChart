@@ -2,7 +2,7 @@ main();
 
 function main() {
     const el = document.getElementById('chart');
-    const chart = new timeChart.TimeChart(el);
+    const chart = new TimeChart(el);
 
     const data = [];
     chart.addDataSeries(data);

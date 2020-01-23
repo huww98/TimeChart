@@ -13,7 +13,7 @@ export default {
             globals: {
                 'd3-color': 'd3',
             },
-            name: 'timeChart',
+            name: 'TimeChart',
             format: 'umd',
             sourcemap: true
         },

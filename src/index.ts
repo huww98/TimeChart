@@ -15,7 +15,7 @@ const defaultSeriesOptions: TimeChartSeriesOptions = {
     name: '',
 };
 
-export class TimeChart {
+export default class TimeChart {
     private renderModel: RenderModel;
     private lineChartRenderer: LineChartRenderer;
     gl: WebGL2RenderingContext;

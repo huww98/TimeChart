@@ -45,13 +45,19 @@ export class RenderModel {
         if (series.length === 0) {
             return;
         }
-        if (this.options.xRange === 'auto') {
+        if (this.options.realTime || this.options.xRange === 'auto') {
             const maxDomain = this.options.baseTime + Math.max(...series.map(s => s.data[s.data.length - 1].x));
-            const minDomain = this.xAutoInitized ?
-                this.xScale.domain()[0] :
-                this.options.baseTime + Math.min(...series.map(s => s.data[0].x));
-            this.xScale.domain([minDomain, maxDomain]);
-            this.xAutoInitized = true;
+            if (this.options.realTime) {
+                const currentDomain = this.xScale.domain();
+                const range = currentDomain[1].getTime() - currentDomain[0].getTime();
+                this.xScale.domain([maxDomain - range, maxDomain]);
+            } else { // Auto
+                const minDomain = this.xAutoInitized ?
+                    this.xScale.domain()[0] :
+                    this.options.baseTime + Math.min(...series.map(s => s.data[0].x));
+                this.xScale.domain([minDomain, maxDomain]);
+                this.xAutoInitized = true;
+            }
         }
         if (this.options.yRange === 'auto') {
             const minMax = series.map(s => {

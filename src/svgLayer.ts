@@ -1,8 +1,7 @@
-import { scaleTime, scaleLinear } from "d3-scale";
 import { axisBottom, axisLeft } from "d3-axis";
 import { select, Selection } from "d3-selection";
 
-import { TimeChartOptions } from './options';
+import { ResolvedOptions } from './options';
 import { RenderModel } from './renderModel';
 
 export class SVGLayer {
@@ -14,7 +13,7 @@ export class SVGLayer {
     svgNode: SVGSVGElement;
 
     constructor(el: HTMLElement,
-        private options: TimeChartOptions,
+        private options: ResolvedOptions,
         private model: RenderModel,
     ) {
         el.style.position = 'relative';

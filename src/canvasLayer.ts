@@ -1,10 +1,10 @@
-import { TimeChartOptions, resolveColorRGBA } from './options';
+import { resolveColorRGBA, ResolvedOptions } from './options';
 
 export class CanvasLayer {
     canvas: HTMLCanvasElement
     gl: WebGL2RenderingContext;
 
-    constructor(el: HTMLElement, options: TimeChartOptions) {
+    constructor(el: HTMLElement, options: ResolvedOptions) {
         el.style.position = 'relative';
         const canvas = document.createElement('canvas');
         canvas.style.width = '100%';

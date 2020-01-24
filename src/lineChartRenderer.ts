@@ -1,8 +1,8 @@
 import { vec2, vec3, mat4 } from 'gl-matrix';
 
-import { RenderModel, DataPoint, DataSeries } from "./renderModel";
+import { RenderModel, DataPoint } from "./renderModel";
 import { LinkedWebGLProgram, throwIfFalsy } from './webGLUtils';
-import { resolveColorRGBA, TimeChartOptions } from './options';
+import { resolveColorRGBA, TimeChartSeriesOptions, ResolvedOptions } from './options';
 
 const enum VertexAttribLocations {
     DATA_POINT = 0,
@@ -180,7 +180,7 @@ class SeriesVertexArray {
     private vertexArrays = [] as VertexArrayInfo[];
     constructor(
         private gl: WebGL2RenderingContext,
-        private series: DataSeries,
+        private series: TimeChartSeriesOptions,
     ) {
     }
 
@@ -232,19 +232,19 @@ class SeriesVertexArray {
 
 export class LineChartRenderer {
     private program = new LineChartWebGLProgram(this.gl)
-    private arrays = new Map<DataSeries, SeriesVertexArray>();
+    private arrays = new Map<TimeChartSeriesOptions, SeriesVertexArray>();
     private height = 0;
 
     constructor(
         private model: RenderModel,
         private gl: WebGL2RenderingContext,
-        private options: TimeChartOptions,
+        private options: ResolvedOptions,
     ) {
         this.program.use();
     }
 
     syncBuffer() {
-        for (const s of this.model.series) {
+        for (const s of this.options.series) {
             let a = this.arrays.get(s);
             if (!a) {
                 a = new SeriesVertexArray(this.gl, s);
@@ -280,10 +280,10 @@ export class LineChartRenderer {
         this.syncDomain();
         const gl = this.gl;
         for (const [ds, arr] of this.arrays) {
-            const color = resolveColorRGBA(ds.options.color);
+            const color = resolveColorRGBA(ds.color);
             gl.uniform4fv(this.program.locations.uColor, color);
 
-            const lineWidth = ds.options.lineWidth ?? this.options.lineWidth;
+            const lineWidth = ds.lineWidth ?? this.options.lineWidth;
             gl.uniform1f(this.program.locations.uLineWidth, lineWidth / 2);
             arr.draw();
         }

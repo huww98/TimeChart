@@ -2,11 +2,11 @@ import { rgb } from 'd3-color';
 
 import { RenderModel, DataPoint } from './renderModel';
 import { LineChartRenderer } from './lineChartRenderer';
-import { TimeChartOptions, resolveColorRGBA, TimeChartSeriesOptions } from './options';
+import { TimeChartOptions, resolveColorRGBA, TimeChartSeriesOptions, ResolvedOptions } from './options';
 import { CanvasLayer } from './canvasLayer';
 import { SVGLayer } from './svgLayer';
 
-const defaultOptions: TimeChartOptions = {
+const defaultOptions = {
     lineWidth: 1,
     backgroundColor: rgb(255, 255, 255, 1),
     paddingTop: 10,
@@ -17,25 +17,32 @@ const defaultOptions: TimeChartOptions = {
     yRange: 'auto',
     realTime: false,
     baseTime: 0,
-};
+} as const;
 
-const defaultSeriesOptions: TimeChartSeriesOptions = {
+const defaultSeriesOptions = {
     color: rgb(0, 0, 0, 1),
     name: '',
-};
+} as const;
 
 export default class TimeChart {
-    private options: TimeChartOptions;
+    public options: ResolvedOptions;
+
     private renderModel: RenderModel;
     private lineChartRenderer: LineChartRenderer;
 
     private canvasLayer: CanvasLayer;
     private svgLayer: SVGLayer;
 
-    constructor(private el: HTMLElement, options?: Partial<TimeChartOptions>) {
-        const resolvedOptions = {
+    constructor(private el: HTMLElement, options?: TimeChartOptions) {
+        const series: TimeChartSeriesOptions[] = options?.series?.map(s => ({
+            data: [] as DataPoint[],
+            ...defaultSeriesOptions,
+            ...s,
+        })) ?? [];
+        const resolvedOptions: ResolvedOptions = {
             ...defaultOptions,
             ...options,
+            series,
         }
         this.options = resolvedOptions;
 
@@ -61,17 +68,5 @@ export default class TimeChart {
         this.renderModel.update();
         this.svgLayer.update();
         this.lineChartRenderer.drawFrame();
-    }
-
-    addDataSeries(data: DataPoint[], options?: Partial<TimeChartSeriesOptions>) {
-        const resolvedOptions = {
-            ...defaultSeriesOptions,
-            ...options,
-        }
-        this.renderModel.series.push({
-            data,
-            options: resolvedOptions,
-            yRangeUpdatedIndex: 0,
-        });
     }
 }

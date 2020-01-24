@@ -1,9 +1,7 @@
-import { TimeChartSeriesOptions, TimeChartOptions } from './options';
+import { TimeChartSeriesOptions, ResolvedOptions } from './options';
 import { scaleTime, scaleLinear } from "d3-scale";
 
-export interface DataSeries {
-    options: TimeChartSeriesOptions;
-    data: DataPoint[];
+interface DataSeriesInfo {
     yRangeUpdatedIndex: number;
 }
 
@@ -17,9 +15,9 @@ export class RenderModel {
     public yScale = scaleLinear();
     private xAutoInitized = false;
     private yAutoInitized = false;
-    public series = [] as DataSeries[];
+    private seriesInfo = new Map<TimeChartSeriesOptions, DataSeriesInfo>();
 
-    constructor(private options: TimeChartOptions) {
+    constructor(private options: ResolvedOptions) {
         if (options.xRange !== 'auto') {
             this.xScale.domain([options.xRange.min, options.xRange.max])
         }
@@ -35,7 +33,15 @@ export class RenderModel {
     }
 
     update() {
-        const series = this.series.filter(s => s.data.length > 0);
+        for (const s of this.options.series) {
+            if (!this.seriesInfo.has(s)) {
+                this.seriesInfo.set(s, {
+                    yRangeUpdatedIndex: 0,
+                });
+            }
+        }
+
+        const series = this.options.series.filter(s => s.data.length > 0);
         if (series.length === 0) {
             return;
         }
@@ -48,25 +54,27 @@ export class RenderModel {
             this.xAutoInitized = true;
         }
         if (this.options.yRange === 'auto') {
-            let minDomain = Math.min(
-                ...series.map(s =>
-                    Math.min(...s.data.slice(s.yRangeUpdatedIndex).map(d => d.y))
-                )
-            );
-            let maxDomain = Math.max(
-                ...series.map(s =>
-                    Math.max(...s.data.slice(s.yRangeUpdatedIndex).map(d => d.y))
-                )
-            );
+            const minMax = series.map(s => {
+                const newY = s.data.slice(this.seriesInfo.get(s)!.yRangeUpdatedIndex).map(d => d.y)
+                return {
+                    min: Math.min(...newY),
+                    max: Math.max(...newY),
+                }
+            })
             if (this.yAutoInitized) {
                 const origDomain = this.yScale.domain();
-                minDomain = Math.min(origDomain[1], minDomain)
-                maxDomain = Math.max(origDomain[0], maxDomain)
+                minMax.push({
+                    min: origDomain[1],
+                    max: origDomain[0],
+                });
             }
+            const minDomain = Math.min(...minMax.map(s => s.min));
+            const maxDomain = Math.max(...minMax.map(s => s.max));
+
             this.yScale.domain([maxDomain, minDomain]).nice();
             this.yAutoInitized = true;
-            for (const s of this.series) {
-                s.yRangeUpdatedIndex = s.data.length;
+            for (const s of series) {
+                this.seriesInfo.get(s)!.yRangeUpdatedIndex = s.data.length;
             }
         }
     }

@@ -6,12 +6,12 @@ import { resolveColorRGBA, TimeChartSeriesOptions, ResolvedOptions } from './opt
 
 const enum VertexAttribLocations {
     DATA_POINT = 0,
-    NORM = 1,
+    DIR = 1,
 }
 
 const vsSource = `#version 300 es
 layout (location = ${VertexAttribLocations.DATA_POINT}) in vec2 aDataPoint;
-layout (location = ${VertexAttribLocations.NORM}) in vec2 aNorm;
+layout (location = ${VertexAttribLocations.DIR}) in vec2 aDir;
 
 uniform mat4 uModelViewMatrix;
 uniform mat4 uProjectionMatrix;
@@ -19,7 +19,9 @@ uniform float uLineWidth;
 
 void main() {
     vec4 cssPose = uModelViewMatrix * vec4(aDataPoint, 0.0, 1.0);
-    gl_Position = uProjectionMatrix * (cssPose + vec4(aNorm * uLineWidth, 0.0, 0.0));
+    vec4 dir = uModelViewMatrix * vec4(aDir, 0.0, 0.0);
+    dir = normalize(dir);
+    gl_Position = uProjectionMatrix * (cssPose + vec4(-dir.y, dir.x, 0.0, 0.0) * uLineWidth);
 }
 `;
 
@@ -76,8 +78,8 @@ class VertexArray {
         gl.enableVertexAttribArray(VertexAttribLocations.DATA_POINT);
         gl.vertexAttribPointer(VertexAttribLocations.DATA_POINT, 2, gl.FLOAT, false, BYTES_PER_POINT, 0);
 
-        gl.enableVertexAttribArray(VertexAttribLocations.NORM);
-        gl.vertexAttribPointer(VertexAttribLocations.NORM, 2, gl.FLOAT, false, BYTES_PER_POINT, 2 * Float32Array.BYTES_PER_ELEMENT);
+        gl.enableVertexAttribArray(VertexAttribLocations.DIR);
+        gl.vertexAttribPointer(VertexAttribLocations.DIR, 2, gl.FLOAT, false, BYTES_PER_POINT, 2 * Float32Array.BYTES_PER_ELEMENT);
     }
 
     bind() {
@@ -112,20 +114,17 @@ class VertexArray {
         let bi = 0;
         const vDP = vec2.create()
         const vPreviousDP = vec2.create()
-        const dir = vec2.create();
-        const norm1 = vec2.create();
-        const norm2 = vec2.create();
+        const dir1 = vec2.create();
+        const dir2 = vec2.create();
 
         function calc(dp: DataPoint, previousDP: DataPoint) {
             vDP[0] = dp.x;
             vDP[1] = dp.y;
             vPreviousDP[0] = previousDP.x;
             vPreviousDP[1] = previousDP.y;
-            vec2.subtract(dir, vDP, vPreviousDP);
-            vec2.normalize(dir, dir);
-            norm1[0] = -dir[1];
-            norm1[1] = dir[0];
-            vec2.negate(norm2, norm1);
+            vec2.subtract(dir1, vDP, vPreviousDP);
+            vec2.normalize(dir1, dir1);
+            vec2.negate(dir2, dir1);
         }
 
         function put(v: vec2) {
@@ -141,18 +140,18 @@ class VertexArray {
             previousDP = dp;
 
             for (const dp of [vPreviousDP, vDP]) {
-                for (const norm of [norm1, norm2]) {
+                for (const dir of [dir1, dir2]) {
                     put(dp);
-                    put(norm);
+                    put(dir);
                 }
             }
         }
 
         if (isOverflow) {
             calc(dataPoints[start + numDPtoAdd], previousDP);
-            for (const norm of [norm1, norm2]) {
+            for (const dir of [dir1, dir2]) {
                 put(vPreviousDP);
-                put(norm);
+                put(dir);
             }
         }
 

@@ -240,9 +240,21 @@ export class LineChartRenderer {
         private options: ResolvedOptions,
     ) {
         this.program.use();
+
+        gl.uniform4fv(this.program.locations.uColor, [0,0,0,1]);
+        gl.uniform1f(this.program.locations.uLineWidth, 1);
+        const modelViewMatrix = mat4.create();
+        gl.uniformMatrix4fv(
+            this.program.locations.uModelViewMatrix,
+            false,
+            modelViewMatrix);
     }
 
     syncBuffer() {
+        if (this.options.series[0].data.length > 250000) {
+            console.log('Skip data');
+            return;
+        }
         for (const s of this.options.series) {
             let a = this.arrays.get(s);
             if (!a) {
@@ -279,11 +291,6 @@ export class LineChartRenderer {
         this.syncDomain();
         const gl = this.gl;
         for (const [ds, arr] of this.arrays) {
-            const color = resolveColorRGBA(ds.color);
-            gl.uniform4fv(this.program.locations.uColor, color);
-
-            const lineWidth = ds.lineWidth ?? this.options.lineWidth;
-            gl.uniform1f(this.program.locations.uLineWidth, lineWidth / 2);
             arr.draw();
         }
     }
@@ -293,27 +300,5 @@ export class LineChartRenderer {
     }
 
     syncDomain() {
-        const m = this.model;
-        const gl = this.gl;
-        const baseTime = this.options.baseTime
-
-        const zero = [m.xScale(baseTime), this.ySvgToCanvas(m.yScale(0)), 0];
-        const one = [m.xScale(baseTime + 1), this.ySvgToCanvas(m.yScale(1)), 0];
-
-        const modelViewMatrix = mat4.create();
-
-        const scaling = vec3.create();
-        vec3.subtract(scaling, one, zero);
-        mat4.fromScaling(modelViewMatrix, scaling);
-
-        const translateMat = mat4.create()
-        mat4.fromTranslation(translateMat, zero);
-
-        mat4.multiply(modelViewMatrix, translateMat, modelViewMatrix);
-
-        gl.uniformMatrix4fv(
-            this.program.locations.uModelViewMatrix,
-            false,
-            modelViewMatrix);
     }
 }

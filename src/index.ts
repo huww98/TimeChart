@@ -66,7 +66,6 @@ export default class TimeChart {
     update() {
         this.canvasLayer.clear();
         this.renderModel.update();
-        this.svgLayer.update();
         this.lineChartRenderer.drawFrame();
     }
 }

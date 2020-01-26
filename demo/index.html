@@ -9,6 +9,7 @@
         #chart {
             width: 100%;
             height: 640px;
+            max-height: 90vh;
         }
         .size-ref {
             display: inline-block;
@@ -21,6 +22,7 @@
 <body>
     <h1>TimeChart Demo</h1>
     <h2>1000 points / second adding to chart.</h2>
+    <p><span id="point-count">0</span> Points</p>
     <div id="chart"></div>
     <button id="stop-btn">Stop</button>
     <p>

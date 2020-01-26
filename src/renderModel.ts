@@ -10,6 +10,16 @@ export interface DataPoint {
     y: number;
 }
 
+function maxMin(arr: number[]) {
+    let max = -Infinity;
+    let min = Infinity;
+    for (const v of arr) {
+        if (v > max) max = v;
+        if (v < min) min = v;
+    }
+    return { max, min };
+}
+
 export class RenderModel {
     public xScale = scaleTime();
     public yScale = scaleLinear();
@@ -60,22 +70,19 @@ export class RenderModel {
             }
         }
         if (this.options.yRange === 'auto') {
-            const minMax = series.map(s => {
+            const maxMinY = series.map(s => {
                 const newY = s.data.slice(this.seriesInfo.get(s)!.yRangeUpdatedIndex).map(d => d.y)
-                return {
-                    min: Math.min(...newY),
-                    max: Math.max(...newY),
-                }
+                return maxMin(newY);
             })
             if (this.yAutoInitized) {
                 const origDomain = this.yScale.domain();
-                minMax.push({
+                maxMinY.push({
                     min: origDomain[1],
                     max: origDomain[0],
                 });
             }
-            const minDomain = Math.min(...minMax.map(s => s.min));
-            const maxDomain = Math.max(...minMax.map(s => s.max));
+            const minDomain = Math.min(...maxMinY.map(s => s.min));
+            const maxDomain = Math.max(...maxMinY.map(s => s.max));
 
             this.yScale.domain([maxDomain, minDomain]).nice();
             this.yAutoInitized = true;

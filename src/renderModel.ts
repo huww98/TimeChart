@@ -20,6 +20,8 @@ function maxMin(arr: number[]) {
     return { max, min };
 }
 
+type UpdateCallback = () => void;
+
 export class RenderModel {
     public xScale = scaleTime();
     public yScale = scaleLinear();
@@ -28,18 +30,23 @@ export class RenderModel {
     private seriesInfo = new Map<TimeChartSeriesOptions, DataSeriesInfo>();
 
     constructor(private options: ResolvedOptions) {
-        if (options.xRange !== 'auto') {
+        if (options.xRange !== 'auto' && options.xRange) {
             this.xScale.domain([options.xRange.min, options.xRange.max])
         }
-        if (options.yRange !== 'auto') {
+        if (options.yRange !== 'auto' && options.yRange) {
             this.yScale.domain([options.yRange.min, options.yRange.max])
         }
     }
 
-    onResize(width: number, height: number) {
+    resize(width: number, height: number) {
         const op = this.options;
         this.xScale.range([op.paddingLeft, width - op.paddingRight]);
         this.yScale.range([op.paddingTop, height - op.paddingBottom]);
+    }
+
+    private updateCallbacks = [] as UpdateCallback[];
+    onUpdate(callback: UpdateCallback) {
+        this.updateCallbacks.push(callback);
     }
 
     update() {
@@ -55,7 +62,11 @@ export class RenderModel {
         if (series.length === 0) {
             return;
         }
-        if (this.options.realTime || this.options.xRange === 'auto') {
+
+        const opXRange = this.options.xRange;
+        const opYRange = this.options.yRange;
+
+        if (this.options.realTime || opXRange === 'auto') {
             const maxDomain = this.options.baseTime + Math.max(...series.map(s => s.data[s.data.length - 1].x));
             if (this.options.realTime) {
                 const currentDomain = this.xScale.domain();
@@ -68,8 +79,11 @@ export class RenderModel {
                 this.xScale.domain([minDomain, maxDomain]);
                 this.xAutoInitized = true;
             }
+        } else if (opXRange) {
+            this.xScale.domain([opXRange.min, opXRange.max])
         }
-        if (this.options.yRange === 'auto') {
+
+        if (opYRange === 'auto') {
             const maxMinY = series.map(s => {
                 const newY = s.data.slice(this.seriesInfo.get(s)!.yRangeUpdatedIndex).map(d => d.y)
                 return maxMin(newY);
@@ -89,6 +103,23 @@ export class RenderModel {
             for (const s of series) {
                 this.seriesInfo.get(s)!.yRangeUpdatedIndex = s.data.length;
             }
+        } else if (opYRange) {
+            this.yScale.domain([opYRange.max, opYRange.min])
         }
+
+        for (const cb of this.updateCallbacks) {
+            cb();
+        }
+    }
+
+    private redrawRequested = false;
+    requestRedraw() {
+        if (this.redrawRequested) {
+            return;
+        }
+        requestAnimationFrame((time) => {
+            this.redrawRequested = false;
+            this.update();
+        });
     }
 }

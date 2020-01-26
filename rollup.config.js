@@ -10,11 +10,8 @@ export default {
     output: [
         {
             file: pkg.main,
-            globals: {
-                'd3-color': 'd3',
-                'd3-selection': 'd3',
-                'd3-scale': 'd3',
-                'd3-axis': 'd3',
+            globals(id) {
+                return id.startsWith('d3-') ? 'd3' : id;
             },
             name: 'TimeChart',
             format: 'umd',
@@ -22,7 +19,7 @@ export default {
         },
         { file: pkg.module, format: 'es', sourcemap: true },
     ],
-    external: ['d3-color', 'd3-selection', 'd3-scale', 'd3-axis'],
+    external: (id) => id.startsWith('d3-'),
     watch: {
         include: 'src/**',
     },

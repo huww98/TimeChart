@@ -239,6 +239,7 @@ export class LineChartRenderer {
         private gl: WebGL2RenderingContext,
         private options: ResolvedOptions,
     ) {
+        model.onUpdate(() => this.drawFrame());
         this.program.use();
     }
 

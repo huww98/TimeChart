@@ -1,7 +1,5 @@
 main();
 
-let stopped = false;
-
 function main() {
     const el = document.getElementById('chart');
     const data = [];
@@ -14,7 +12,8 @@ function main() {
     const pointCountEl = document.getElementById('point-count');
 
     let x = performance.now() - 20*1000;
-    function update(time) {
+    function update() {
+        const time = performance.now();
         for (; x < time; x += 1) {
             // const y = Math.random() * 500 + 100;
             const y = Math.sin(x * 0.002) * 300 + 320;
@@ -22,13 +21,10 @@ function main() {
         }
         pointCountEl.innerText = data.length;
         chart.update();
-
-        if (!stopped)
-            requestAnimationFrame(update);
     }
-    requestAnimationFrame(update);
-}
 
-document.getElementById('stop-btn').addEventListener('click', function () {
-    stopped = true
-})
+    const ev = setInterval(update, 5);
+    document.getElementById('stop-btn').addEventListener('click', function () {
+        clearInterval(ev);
+    })
+}

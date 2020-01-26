@@ -1,10 +1,13 @@
 import { resolveColorRGBA, ResolvedOptions } from './options';
+import { RenderModel } from './renderModel';
 
 export class CanvasLayer {
     canvas: HTMLCanvasElement
     gl: WebGL2RenderingContext;
 
-    constructor(el: HTMLElement, options: ResolvedOptions) {
+    constructor(el: HTMLElement, options: ResolvedOptions, model: RenderModel) {
+        model.onUpdate(() => this.clear());
+
         el.style.position = 'relative';
         const canvas = document.createElement('canvas');
         canvas.style.width = '100%';

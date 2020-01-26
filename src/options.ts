@@ -11,9 +11,10 @@ interface TimeChartOptionsBase {
     paddingTop: number;
     paddingBottom: number;
 
-    xRange: { min: number | Date, max: number | Date } | 'auto';
-    yRange: { min: number, max: number } | 'auto';
+    xRange: { min: number | Date, max: number | Date } | 'auto' | null;
+    yRange: { min: number, max: number } | 'auto' | null;
     realTime: boolean;
+    zoom: boolean;
 
     /** Milliseconds since `new Date(0)`. Every x in data are relative to this.
      *

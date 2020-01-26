@@ -62,6 +62,7 @@ export default class TimeChart {
         this.svgLayer.onResize();
         this.canvasLayer.onResize();
         this.lineChartRenderer.onResize(canvas.clientWidth, canvas.clientHeight);
+        this.update();
     }
 
     update() {

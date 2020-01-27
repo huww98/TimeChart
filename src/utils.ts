@@ -17,12 +17,13 @@ export function domainSearch<T>(data: ArrayLike<T>, start: number, end: number, 
         const maxDomain = key(data[end]);
         const ratio = maxDomain <= minDomain ? 0 : (value - minDomain) / (maxDomain - minDomain);
         let expectedIndex = Math.ceil(start + ratio * (end - start));
-        if (expectedIndex === end) expectedIndex--;
+        if (expectedIndex === end)
+            expectedIndex--;
+        else if (expectedIndex === start)
+            expectedIndex++;
         const domain = key(data[expectedIndex]);
 
-        if (domain === value) {
-            return expectedIndex;
-        } else if (domain < value) {
+        if (domain < value) {
             start = expectedIndex;
         } else {
             end = expectedIndex;

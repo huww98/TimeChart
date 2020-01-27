@@ -22,13 +22,12 @@ describe('DomainSearch test', () => {
     });
     it('duplicated', () => {
         const data = [0, 1, 2, 2, 4, 5];
-        {
-            const res = domainSearch(data, 0, data.length, 2, key)
-            expect([2, 3, 4].includes(res)).toBeTruthy();
-        }
-        {
-            const res = domainSearch(data, 0, data.length, 3, key)
-            expect(res).toEqual(4);
+        expect(domainSearch(data, 0, data.length, 3, key)).toEqual(4);
+    });
+    it('duplicated lower bound', () => {
+        const data = [0, 1, 2, 2, 4, 5];
+        for (let end = 2; end <= 6; end++) {
+            expect(domainSearch(data, 0, end, 2, key)).toEqual(2);
         }
     });
     it('uneven', () => {

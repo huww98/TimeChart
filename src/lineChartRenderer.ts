@@ -2,6 +2,7 @@ import { vec2, vec3, mat4 } from 'gl-matrix';
 
 import { RenderModel, DataPoint } from "./renderModel";
 import { LinkedWebGLProgram, throwIfFalsy } from './webGLUtils';
+import { domainSearch } from './utils';
 import { resolveColorRGBA, TimeChartSeriesOptions, ResolvedOptions } from './options';
 
 const enum VertexAttribLocations {
@@ -67,7 +68,14 @@ class VertexArray {
     dataBuffer: WebGLBuffer;
     length = 0;
 
-    constructor(private gl: WebGL2RenderingContext) {
+    /**
+     * @param firstDataPointIndex At least 1, since datapoint 0 has no path to draw.
+     */
+    constructor(
+        private gl: WebGL2RenderingContext,
+        private dataPoints: ArrayLike<DataPoint>,
+        public readonly firstDataPointIndex: number,
+    ) {
         this.vao = throwIfFalsy(gl.createVertexArray());
         this.bind();
 
@@ -97,10 +105,12 @@ class VertexArray {
     }
 
     /**
-     * @param start At least 1, since datapoint 0 has no path to draw.
      * @returns Next data point index, or `dataPoints.length` if all data added.
      */
-    addDataPoints(dataPoints: ArrayLike<DataPoint>, start: number): number {
+    addDataPoints(): number {
+        const dataPoints = this.dataPoints;
+        const start = this.firstDataPointIndex + this.length;
+
         const remainDPCapacity = BUFFER_DATA_POINT_CAPACITY - this.length;
         const remainDPCount = dataPoints.length - start
         const isOverflow = remainDPCapacity < remainDPCount;
@@ -163,20 +173,25 @@ class VertexArray {
         return start + numDPtoAdd;
     }
 
-    draw() {
+    draw(renderIndex: { min: number, max: number }) {
+        const first = Math.max(0, renderIndex.min - this.firstDataPointIndex);
+        const last = Math.min(this.length, renderIndex.max - this.firstDataPointIndex)
+        const count = last - first;
+
         const gl = this.gl;
         this.bind();
-        gl.drawArrays(gl.TRIANGLE_STRIP, 0, this.length * POINT_PER_DATAPOINT);
+        gl.drawArrays(gl.TRIANGLE_STRIP, first * POINT_PER_DATAPOINT, count * POINT_PER_DATAPOINT);
     }
 }
 
-interface VertexArrayInfo {
-    array: VertexArray;
-    firstDataPointIndex: number;
-}
-
+/**
+ * An array of `VertexArray` to represent a series
+ *
+ * `series.data`  index: 0  [1 ... C] [C+1 ... 2C] ... (C = `BUFFER_DATA_POINT_CAPACITY`)
+ * `vertexArrays` index:     0         1           ...
+ */
 class SeriesVertexArray {
-    private vertexArrays = [] as VertexArrayInfo[];
+    private vertexArrays = [] as VertexArray[];
     constructor(
         private gl: WebGL2RenderingContext,
         private series: TimeChartSeriesOptions,
@@ -188,23 +203,20 @@ class SeriesVertexArray {
         let bufferedDataPointNum = 1;
 
         const newArray = () => {
-            activeArray = new VertexArray(this.gl);
-            this.vertexArrays.push({
-                array: activeArray,
-                firstDataPointIndex: bufferedDataPointNum,
-            });
+            activeArray = new VertexArray(this.gl, this.series.data , bufferedDataPointNum);
+            this.vertexArrays.push(activeArray);
         }
 
         if (this.vertexArrays.length > 0) {
             const lastVertexArray = this.vertexArrays[this.vertexArrays.length - 1];
-            bufferedDataPointNum = lastVertexArray.firstDataPointIndex + lastVertexArray.array.length;
+            bufferedDataPointNum = lastVertexArray.firstDataPointIndex + lastVertexArray.length;
             if (bufferedDataPointNum > this.series.data.length) {
                 throw new Error('remove data unsupported.');
             }
             if (bufferedDataPointNum === this.series.data.length) {
                 return;
             }
-            activeArray = lastVertexArray.array;
+            activeArray = lastVertexArray;
         } else if (this.series.data.length >= 2) {
             newArray();
             activeArray = activeArray!;
@@ -213,7 +225,7 @@ class SeriesVertexArray {
         }
 
         while (true) {
-            bufferedDataPointNum = activeArray.addDataPoints(this.series.data, bufferedDataPointNum);
+            bufferedDataPointNum = activeArray.addDataPoints();
             if (bufferedDataPointNum >= this.series.data.length) {
                 if (bufferedDataPointNum > this.series.data.length) { throw Error('Assertion failed.'); }
                 break;
@@ -222,9 +234,21 @@ class SeriesVertexArray {
         }
     }
 
-    draw() {
-        for (const a of this.vertexArrays) {
-            a.array.draw();
+    draw(renderDomain: { min: number, max: number }) {
+        const data = this.series.data;
+        if (data.length === 0 || data[0].x > renderDomain.max || data[data.length - 1].x < renderDomain.min) {
+            return;
+        }
+
+        const key = (d: DataPoint) => d.x
+        const minIndex = domainSearch(data, 1, data.length, renderDomain.min, key);
+        const maxIndex = domainSearch(data, minIndex, data.length - 1, renderDomain.max, key) + 1;
+        const minArrayIndex = Math.floor((minIndex - 1) / BUFFER_DATA_POINT_CAPACITY);
+        const maxArrayIndex = Math.ceil((maxIndex - 1) / BUFFER_DATA_POINT_CAPACITY);
+
+        const renderIndex = { min: minIndex, max: maxIndex };
+        for (let i = minArrayIndex; i < maxArrayIndex; i++) {
+            this.vertexArrays[i].draw(renderIndex);
         }
     }
 }
@@ -233,6 +257,7 @@ export class LineChartRenderer {
     private program = new LineChartWebGLProgram(this.gl)
     private arrays = new Map<TimeChartSeriesOptions, SeriesVertexArray>();
     private height = 0;
+    private width = 0;
 
     constructor(
         private model: RenderModel,
@@ -255,7 +280,8 @@ export class LineChartRenderer {
     }
 
     onResize(width: number, height: number) {
-        this.height = height
+        this.height = height;
+        this.width = width;
 
         const scale = vec2.fromValues(width, height)
         vec2.divide(scale, scale, [2, 2])
@@ -285,7 +311,12 @@ export class LineChartRenderer {
 
             const lineWidth = ds.lineWidth ?? this.options.lineWidth;
             gl.uniform1f(this.program.locations.uLineWidth, lineWidth / 2);
-            arr.draw();
+
+            const renderDomain = {
+                min: this.model.xScale.invert(-lineWidth / 2).getTime() - this.options.baseTime,
+                max: this.model.xScale.invert(this.width + lineWidth / 2).getTime() - this.options.baseTime,
+            };
+            arr.draw(renderDomain);
         }
     }
 

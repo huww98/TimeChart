@@ -26,5 +26,5 @@ function main() {
     const ev = setInterval(update, 5);
     document.getElementById('stop-btn').addEventListener('click', function () {
         clearInterval(ev);
-    })
+    });
 }

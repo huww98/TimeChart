@@ -27,6 +27,7 @@
         "d3-selection": "^1.4.1",
         "d3-zoom": "^1.8.3",
         "gl-matrix": "^3.1.0",
+        "mathjs": "^6.5.0",
         "tslib": "^1.10.0"
     },
     "devDependencies": {
@@ -40,6 +41,7 @@
         "@types/d3-zoom": "^1.7.4",
         "@types/gl-matrix": "^2.4.5",
         "@types/jest": "^24.9.1",
+        "@types/mathjs": "^6.0.4",
         "http-server": "^0.12.1",
         "jest": "^25.1.0",
         "rollup": "^1.29.1",

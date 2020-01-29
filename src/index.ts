@@ -5,6 +5,7 @@ import { LineChartRenderer } from './lineChartRenderer';
 import { TimeChartOptions, resolveColorRGBA, TimeChartSeriesOptions, ResolvedOptions } from './options';
 import { CanvasLayer } from './canvasLayer';
 import { SVGLayer } from './svgLayer';
+import { ChartZoom } from './chartZoom';
 
 const defaultOptions = {
     lineWidth: 1,
@@ -28,7 +29,7 @@ const defaultSeriesOptions = {
 export default class TimeChart {
     public options: ResolvedOptions;
 
-    private renderModel: RenderModel;
+    private model: RenderModel;
     private lineChartRenderer: LineChartRenderer;
 
     private canvasLayer: CanvasLayer;
@@ -47,18 +48,39 @@ export default class TimeChart {
         }
         this.options = resolvedOptions;
 
-        this.renderModel = new RenderModel(resolvedOptions);
-        this.canvasLayer = new CanvasLayer(el, resolvedOptions, this.renderModel);
-        this.svgLayer = new SVGLayer(el, resolvedOptions, this.renderModel);
-        this.lineChartRenderer = new LineChartRenderer(this.renderModel, this.canvasLayer.gl, resolvedOptions);
+        this.model = new RenderModel(resolvedOptions);
+        this.canvasLayer = new CanvasLayer(el, resolvedOptions, this.model);
+        this.svgLayer = new SVGLayer(el, resolvedOptions, this.model);
+        this.lineChartRenderer = new LineChartRenderer(this.model, this.canvasLayer.gl, resolvedOptions);
 
         this.onResize();
         window.addEventListener('resize', () => this.onResize());
+        this.registerZoom();
+    }
+
+    private registerZoom() {
+        if (this.options.zoom) {
+            const z = new ChartZoom(this.el, {
+                x: {
+                    scale: this.model.xScale,
+                    minDomain: 0,
+                    maxDomain: (new Date(2100, 0, 1)).getTime(),
+                    minDomainExtent: 50,
+                    maxDomainExtent: 10 * 365 * 24 * 3600 * 1000,
+                }
+            })
+            this.model.onUpdate(() => z.update());
+            z.onUpdate(() => {
+                this.options.xRange = null;
+                this.options.realTime = false;
+                this.update();
+            });
+        }
     }
 
     onResize() {
         const canvas = this.canvasLayer.canvas;
-        this.renderModel.resize(canvas.clientWidth, canvas.clientHeight);
+        this.model.resize(canvas.clientWidth, canvas.clientHeight);
         this.svgLayer.onResize();
         this.canvasLayer.onResize();
         this.lineChartRenderer.onResize(canvas.clientWidth, canvas.clientHeight);
@@ -66,6 +88,6 @@ export default class TimeChart {
     }
 
     update() {
-        this.renderModel.requestRedraw();
+        this.model.requestRedraw();
     }
 }

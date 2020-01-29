@@ -31,3 +31,7 @@ export function domainSearch<T>(data: ArrayLike<T>, start: number, end: number, 
     }
     return end;
 }
+
+export function zip<T1, T2>(...rows: [T1[], T2[]]) {
+    return [...rows[0]].map((_, c) => rows.map(row => row[c])) as [T1, T2][];
+}

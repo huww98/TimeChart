@@ -1,6 +1,5 @@
 import { axisBottom, axisLeft } from "d3-axis";
 import { select, Selection, event } from "d3-selection";
-import { zoom, ZoomTransform } from "d3-zoom";
 
 import { ResolvedOptions } from './options';
 import { RenderModel } from './renderModel';
@@ -28,24 +27,6 @@ export class SVGLayer {
         this.svgNode = svg.node()!;
         this.xg = svg.append('g');
         this.yg = svg.append('g');
-
-        const xBeforeZoom = model.xScale;
-
-        const zoomed = () => {
-            const trans: ZoomTransform = event.transform;
-            xBeforeZoom.range(model.xScale.range());
-            model.xScale = trans.rescaleX(xBeforeZoom);
-            this.xAxis.scale(model.xScale);
-            options.xRange = null;
-            options.realTime = false;
-            model.requestRedraw();
-        }
-
-        if (options.zoom) {
-            const z = zoom()
-                .on('zoom', zoomed);
-            svg.call(z as any); // TODO: Workaround type check.
-        }
     }
 
     update() {

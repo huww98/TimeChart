@@ -1,5 +1,6 @@
 import { axisBottom, axisLeft } from "d3-axis";
-import { select, Selection, event } from "d3-selection";
+import { scaleTime } from  'd3-scale'
+import { select, Selection } from "d3-selection";
 
 import { ResolvedOptions } from './options';
 import { RenderModel } from './renderModel';
@@ -30,6 +31,11 @@ export class SVGLayer {
     }
 
     update() {
+        const xs = this.model.xScale;
+        const xts = scaleTime()
+            .domain(xs.domain().map(d => d + this.options.baseTime))
+            .range(xs.range());
+        this.xAxis.scale(xts);
         this.xg.call(this.xAxis);
         this.yg.call(this.yAxis);
     }

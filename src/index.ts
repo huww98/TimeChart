@@ -60,13 +60,14 @@ export default class TimeChart {
 
     private registerZoom() {
         if (this.options.zoom) {
+            const DAY = 24 * 3600 * 1000;
             const z = new ChartZoom(this.el, {
                 x: {
                     scale: this.model.xScale,
-                    minDomain: 0,
-                    maxDomain: (new Date(2100, 0, 1)).getTime(),
+                    minDomain: -60 * 1000,
+                    maxDomain: 10 * 365 * DAY,
                     minDomainExtent: 50,
-                    maxDomainExtent: 10 * 365 * 24 * 3600 * 1000,
+                    maxDomainExtent: 1 * 365 * DAY,
                 }
             })
             this.model.onUpdate(() => z.update());

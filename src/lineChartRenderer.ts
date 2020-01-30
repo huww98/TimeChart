@@ -313,8 +313,8 @@ export class LineChartRenderer {
             gl.uniform1f(this.program.locations.uLineWidth, lineWidth / 2);
 
             const renderDomain = {
-                min: this.model.xScale.invert(-lineWidth / 2).getTime() - this.options.baseTime,
-                max: this.model.xScale.invert(this.width + lineWidth / 2).getTime() - this.options.baseTime,
+                min: this.model.xScale.invert(-lineWidth / 2),
+                max: this.model.xScale.invert(this.width + lineWidth / 2),
             };
             arr.draw(renderDomain);
         }
@@ -327,10 +327,9 @@ export class LineChartRenderer {
     syncDomain() {
         const m = this.model;
         const gl = this.gl;
-        const baseTime = this.options.baseTime
 
-        const zero = [m.xScale(baseTime), this.ySvgToCanvas(m.yScale(0)), 0];
-        const one = [m.xScale(baseTime + 1), this.ySvgToCanvas(m.yScale(1)), 0];
+        const zero = [m.xScale(0), this.ySvgToCanvas(m.yScale(0)), 0];
+        const one = [m.xScale(1), this.ySvgToCanvas(m.yScale(1)), 0];
 
         const modelViewMatrix = mat4.create();
 

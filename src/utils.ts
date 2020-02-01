@@ -32,6 +32,14 @@ export function domainSearch<T>(data: ArrayLike<T>, start: number, end: number, 
     return end;
 }
 
-export function zip<T1, T2>(...rows: [T1[], T2[]]) {
-    return [...rows[0]].map((_, c) => rows.map(row => row[c])) as [T1, T2][];
+export class EventDispatcher<TArgs extends Array<any>>  {
+    private callbacks: Array<(...args: TArgs) => void> = []
+    on(callback: (...args: TArgs) => void) {
+        this.callbacks.push(callback);
+    }
+    dispatch(...args: TArgs) {
+        for (const cb of this.callbacks) {
+            cb(...args);
+        }
+    }
 }

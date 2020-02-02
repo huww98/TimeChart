@@ -64,10 +64,10 @@ export default class TimeChart {
             const z = new ChartZoom(this.el, {
                 x: {
                     scale: this.model.xScale,
-                    minDomain: -60 * 1000,
+                    minDomain: -DAY,
                     maxDomain: 10 * 365 * DAY,
                     minDomainExtent: 50,
-                    maxDomainExtent: 1 * 365 * DAY,
+                    maxDomainExtent: 2 * 365 * DAY,
                 }
             })
             this.model.onUpdate(() => z.update());

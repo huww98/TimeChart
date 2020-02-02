@@ -1,5 +1,5 @@
-import { linearRegression, scaleK } from './utils';
-import { DIRECTION, ResolvedOptions, CapableElement, dirOptions, Point } from './options';
+import { linearRegression, scaleK, applyNewDomain, variance } from './utils';
+import { DIRECTION, ResolvedOptions, CapableElement, dirOptions, Point, ResolvedAxisOptions } from './options';
 import { EventDispatcher } from '../utils';
 
 export class ChartZoomTouch {
@@ -51,6 +51,20 @@ export class ChartZoomTouch {
         this.el.style.touchAction = actions.join(' ')
     }
 
+    private calcKB(dir: DIRECTION, op: ResolvedAxisOptions, data: { current: number; domain: number}[]) {
+        if (dir === this.majorDirection && data.length >= 2) {
+            const domain = op.scale.domain();
+            const extent = domain[1] - domain[0];
+            if (variance(data.map(d => d.domain)) > 1e-4 * extent * extent) {
+                return linearRegression(data.map(t => ({ x: t.current, y: t.domain })));
+            }
+        }
+        // Pan only
+        const k = scaleK(op.scale);
+        const b = data.map(t => t.domain - k * t.current).reduce((a, b) => a + b) / data.length;
+        return { k, b };
+    }
+
     private touchPoints(touches: TouchList) {
         const boundingBox = this.el.getBoundingClientRect();
         const ts = new Map([...touches].map(t => [t.identifier, {
@@ -66,18 +80,11 @@ export class ChartZoomTouch {
             if (temp.length === 0) {
                 continue;
             }
-            let k: number, b: number;
-            if (dir === this.majorDirection && temp.length >= 2) {
-                const res = linearRegression(temp.map(t => ({ x: t.current, y: t.domain })))
-                k = res.k; b = res.b;
-            } else {
-                // Pan only
-                k = scaleK(scale);
-                b = temp.map(t => t.domain - k * t.current).reduce((a, b) => a + b) / temp.length;
-            }
+            const { k, b } = this.calcKB(dir, op, temp);
             const domain = scale.range().map(r => b + k * r);
-            op.scale.domain(domain);
-            changed = true;
+            if (applyNewDomain(op, domain)) {
+                changed = true;
+            }
         }
         this.previousPoints = ts;
 
@@ -112,7 +119,7 @@ export class ChartZoomTouch {
     }
 
     private onTouchEnd(event: TouchEvent) {
-        if (event.touches.length === 0) {
+        if (event.touches.length < 2) {
             this.majorDirection = DIRECTION.UNKNOWN;
         }
         this.touchPoints(event.touches);

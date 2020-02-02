@@ -1,5 +1,5 @@
 import { CapableElement, ResolvedOptions, Point, DIRECTION, dirOptions } from './options';
-import { scaleK } from './utils';
+import { scaleK, applyNewDomain } from './utils';
 import { EventDispatcher } from '../utils';
 
 export class ChartZoomMouse {
@@ -31,8 +31,10 @@ export class ChartZoomMouse {
             const offset = p[dir] - this.previousPoint[dir];
             const k = scaleK(op.scale);
             const domain = op.scale.domain();
-            op.scale.domain(domain.map(d => d - k * offset));
-            changed = true;
+            const newDomain = domain.map(d => d - k * offset);
+            if (applyNewDomain(op, newDomain)) {
+                changed = true;
+            }
         }
         this.previousPoint = p;
         if (changed) {
@@ -41,7 +43,6 @@ export class ChartZoomMouse {
     }
 
     private onMouseDown(event: PointerEvent) {
-        console.log(event.pointerType)
         if (event.pointerType !== 'mouse') {
             return;
         }

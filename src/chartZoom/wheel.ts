@@ -1,6 +1,6 @@
 import { CapableElement, ResolvedOptions, DIRECTION, dirOptions } from "./options";
 import { EventDispatcher } from '../utils'
-import { scaleK } from './utils';
+import { scaleK, applyNewDomain, clamp } from './utils';
 
 export class ChartZoomWheel {
     public scaleUpdated = new EventDispatcher<[]>();
@@ -55,17 +55,30 @@ export class ChartZoomWheel {
             [DIRECTION.Y]: event.clientY - boundingRect.right,
         }
 
+        let changed = false;
         for (const { dir, op } of dirOptions(this.options)) {
             const domain = op.scale.domain();
             const k = scaleK(op.scale);
             const trans = transform[dir];
             const transOrigin = op.scale.invert(origin[dir]);
             trans.translate *= k;
-            trans.zoom *= 0.003;
+            trans.zoom *= 0.002;
+
+            const extent = domain[1] - domain[0];
+            const translateCap = 0.4 * extent;
+            trans.translate = clamp(trans.translate, -translateCap, translateCap);
+
+            const zoomCap = 0.5;
+            trans.zoom = clamp(trans.zoom, -zoomCap, zoomCap);
+
             const newDomain = domain.map(d => d + trans.translate + (d - transOrigin) * trans.zoom);
-            op.scale.domain(newDomain);
+            if (applyNewDomain(op, newDomain)) {
+                changed = true;
+            }
         }
 
-        this.scaleUpdated.dispatch();
+        if (changed) {
+            this.scaleUpdated.dispatch();
+        }
     }
 }

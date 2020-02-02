@@ -1,7 +1,6 @@
 import { CapableElement, ChartZoomOptions, ResolvedOptions } from "./options";
 import { ChartZoomTouch } from './touch';
 import { ChartZoomWheel } from './wheel';
-import { ChartZoomBoundary } from './boundary';
 import { EventDispatcher } from '../utils';
 import { ChartZoomMouse } from './mouse';
 
@@ -17,7 +16,6 @@ export class ChartZoom {
     private touch: ChartZoomTouch;
     private mouse: ChartZoomMouse;
     private wheel: ChartZoomWheel;
-    private boundary: ChartZoomBoundary;
     private scaleUpdated = new EventDispatcher<[]>();
 
     constructor(private el: CapableElement, options?: ChartZoomOptions) {
@@ -30,7 +28,6 @@ export class ChartZoom {
         this.touch = new ChartZoomTouch(el, this.options);
         this.mouse = new ChartZoomMouse(el, this.options);
         this.wheel = new ChartZoomWheel(el, this.options);
-        this.boundary = new ChartZoomBoundary(this.options);
 
         const cb = () => this.dispatchScaleUpdated();
         this.touch.scaleUpdated.on(cb);
@@ -39,7 +36,6 @@ export class ChartZoom {
     }
 
     private dispatchScaleUpdated() {
-        this.boundary.enforceBondary();
         this.scaleUpdated.dispatch();
     }
 

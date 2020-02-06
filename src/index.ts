@@ -2,7 +2,7 @@ import { rgb } from 'd3-color';
 
 import { RenderModel, DataPoint } from './renderModel';
 import { LineChartRenderer } from './lineChartRenderer';
-import { TimeChartOptions, resolveColorRGBA, TimeChartSeriesOptions, ResolvedOptions } from './options';
+import { TimeChartOptions, TimeChartSeriesOptions, ResolvedOptions, ZoomOptions, ResolvedZoomOptions } from './options';
 import { CanvasLayer } from './canvasLayer';
 import { SVGLayer } from './svgLayer';
 import { ChartZoom } from './chartZoom';
@@ -17,7 +17,6 @@ const defaultOptions = {
     xRange: 'auto',
     yRange: 'auto',
     realTime: false,
-    zoom: true,
     baseTime: 0,
 } as const;
 
@@ -36,46 +35,69 @@ export default class TimeChart {
     private svgLayer: SVGLayer;
 
     constructor(private el: HTMLElement, options?: TimeChartOptions) {
-        const series: TimeChartSeriesOptions[] = options?.series?.map(s => ({
+        options = options ?? {};
+        const series: TimeChartSeriesOptions[] = options.series?.map(s => ({
             data: [] as DataPoint[],
             ...defaultSeriesOptions,
             ...s,
         })) ?? [];
-        const resolvedOptions: ResolvedOptions = {
+        const renderOptions = {
             ...defaultOptions,
             ...options,
             series,
-        }
-        this.options = resolvedOptions;
+        };
 
-        this.model = new RenderModel(resolvedOptions);
-        this.canvasLayer = new CanvasLayer(el, resolvedOptions, this.model);
-        this.svgLayer = new SVGLayer(el, resolvedOptions, this.model);
-        this.lineChartRenderer = new LineChartRenderer(this.model, this.canvasLayer.gl, resolvedOptions);
+        this.model = new RenderModel(renderOptions);
+        this.canvasLayer = new CanvasLayer(el, renderOptions, this.model);
+        this.svgLayer = new SVGLayer(el, renderOptions, this.model);
+        this.lineChartRenderer = new LineChartRenderer(this.model, this.canvasLayer.gl, renderOptions);
 
+        this.options = Object.assign(renderOptions, {
+            zoom: this.registerZoom(options.zoom)
+        });
         this.onResize();
         window.addEventListener('resize', () => this.onResize());
-        this.registerZoom();
     }
 
-    private registerZoom() {
-        if (this.options.zoom) {
-            const DAY = 24 * 3600 * 1000;
+    private registerZoom(zoomOptions: ZoomOptions | undefined) {
+        if (zoomOptions) {
             const z = new ChartZoom(this.el, {
-                x: {
+                x: zoomOptions.x && {
+                    ...zoomOptions.x,
                     scale: this.model.xScale,
-                    minDomain: -DAY,
-                    maxDomain: 10 * 365 * DAY,
-                    minDomainExtent: 50,
-                    maxDomainExtent: 2 * 365 * DAY,
+                },
+                y: zoomOptions.y && {
+                    ...zoomOptions.y,
+                    scale: this.model.yScale,
                 }
-            })
-            this.model.onUpdate(() => z.update());
+            });
+            const resolvedOptions = z.options as ResolvedZoomOptions
+            this.model.updated.on(() => {
+                const dirs = [
+                    [resolvedOptions.x, this.model.xScale, this.model.xRange],
+                    [resolvedOptions.y, this.model.yScale, this.model.yRange],
+                ] as const;
+                for (const [op, scale, range] of dirs) {
+                    if (!op?.autoRange) {
+                        continue;
+                    }
+                    let [min, max] = scale.domain();
+                    if (range) {
+                        min = Math.min(min, range.min);
+                        max = Math.max(max, range.max);
+                    }
+                    op.minDomain = min;
+                    op.maxDomain = max;
+                }
+                z.update();
+            });
             z.onScaleUpdated(() => {
                 this.options.xRange = null;
+                this.options.yRange = null;
                 this.options.realTime = false;
                 this.update();
             });
+            return resolvedOptions;
         }
     }
 

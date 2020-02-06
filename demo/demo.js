@@ -8,6 +8,14 @@ function main() {
         series: [{ data }],
         xRange: { min: 0, max: 20*1000 },
         realTime: true,
+        zoom: {
+            x: {
+                autoRange: true,
+            },
+            y: {
+                autoRange: true,
+            }
+        },
     });
     const pointCountEl = document.getElementById('point-count');
 

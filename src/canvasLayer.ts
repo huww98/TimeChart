@@ -1,12 +1,12 @@
-import { resolveColorRGBA, ResolvedOptions } from './options';
+import { resolveColorRGBA, ResolvedRenderOptions } from './options';
 import { RenderModel } from './renderModel';
 
 export class CanvasLayer {
     canvas: HTMLCanvasElement
     gl: WebGL2RenderingContext;
 
-    constructor(el: HTMLElement, options: ResolvedOptions, model: RenderModel) {
-        model.onUpdate(() => this.clear());
+    constructor(el: HTMLElement, options: ResolvedRenderOptions, model: RenderModel) {
+        model.updated.on(() => this.clear());
 
         el.style.position = 'relative';
         const canvas = document.createElement('canvas');

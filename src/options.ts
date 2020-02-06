@@ -3,7 +3,25 @@ import { DataPoint } from './renderModel';
 
 type ColorSpecifier = ColorSpaceObject | ColorCommonInstance | string
 
-interface TimeChartOptionsBase {
+interface AxisZoomOptions {
+    autoRange: boolean;
+    minDomain: number;
+    maxDomain: number;
+    minDomainExtent: number;
+    maxDomainExtent: number;
+}
+
+export interface ZoomOptions {
+    x?: Partial<AxisZoomOptions>;
+    y?: Partial<AxisZoomOptions>;
+}
+
+export interface ResolvedZoomOptions {
+    x?: AxisZoomOptions;
+    y?: AxisZoomOptions;
+}
+
+interface TimeChartRenderOptions {
     lineWidth: number;
     backgroundColor: ColorSpecifier;
     paddingLeft: number;
@@ -14,7 +32,6 @@ interface TimeChartOptionsBase {
     xRange: { min: number | Date, max: number | Date } | 'auto' | null;
     yRange: { min: number, max: number } | 'auto' | null;
     realTime: boolean;
-    zoom: boolean;
 
     /** Milliseconds since `new Date(0)`. Every x in data are relative to this.
      *
@@ -23,12 +40,20 @@ interface TimeChartOptionsBase {
     baseTime: number;
 }
 
-export interface TimeChartOptions extends Partial<TimeChartOptionsBase> {
-    series?: Partial<TimeChartSeriesOptions>[];
+interface TimeChartOptionsBase extends TimeChartRenderOptions {
 }
 
-export interface ResolvedOptions extends TimeChartOptionsBase {
+export interface TimeChartOptions extends Partial<TimeChartOptionsBase> {
+    series?: Partial<TimeChartSeriesOptions>[];
+    zoom?: ZoomOptions;
+}
+
+export interface ResolvedRenderOptions extends TimeChartRenderOptions {
     series: TimeChartSeriesOptions[];
+}
+
+export interface ResolvedOptions extends ResolvedRenderOptions {
+    zoom?: ResolvedZoomOptions;
 }
 
 export interface TimeChartSeriesOptions {

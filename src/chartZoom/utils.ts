@@ -53,7 +53,7 @@ export function applyNewDomain(op: ResolvedAxisOptions, domain: number[]) {
         return false;
     }
 
-    const extent = Math.min(op.maxDomainExtent, Math.max(op.minDomainExtent, inExtent));
+    const extent = Math.min(op.maxDomainExtent, op.maxDomain - op.minDomain, Math.max(op.minDomainExtent, inExtent));
     const deltaE = (extent - inExtent) / 2;
     domain[0] -= deltaE;
     domain[1] += deltaE;

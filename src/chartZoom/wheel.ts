@@ -52,7 +52,7 @@ export class ChartZoomWheel {
         const boundingRect = this.el.getBoundingClientRect();
         const origin = {
             [DIRECTION.X]: event.clientX - boundingRect.left,
-            [DIRECTION.Y]: event.clientY - boundingRect.right,
+            [DIRECTION.Y]: event.clientY - boundingRect.top,
         }
 
         let changed = false;
@@ -63,6 +63,10 @@ export class ChartZoomWheel {
             const transOrigin = op.scale.invert(origin[dir]);
             trans.translate *= k;
             trans.zoom *= 0.002;
+            if (event.shiftKey) {
+                trans.translate *= 5;
+                trans.zoom *= 5;
+            }
 
             const extent = domain[1] - domain[0];
             const translateCap = 0.4 * extent;

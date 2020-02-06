@@ -2,7 +2,7 @@ import { axisBottom, axisLeft } from "d3-axis";
 import { scaleTime } from  'd3-scale'
 import { select, Selection } from "d3-selection";
 
-import { ResolvedOptions } from './options';
+import { ResolvedRenderOptions } from './options';
 import { RenderModel } from './renderModel';
 
 export class SVGLayer {
@@ -14,10 +14,10 @@ export class SVGLayer {
     svgNode: SVGSVGElement;
 
     constructor(el: HTMLElement,
-        private options: ResolvedOptions,
+        private options: ResolvedRenderOptions,
         private model: RenderModel,
     ) {
-        model.onUpdate(() => this.update());
+        model.updated.on(() => this.update());
 
         el.style.position = 'relative';
 
@@ -37,6 +37,8 @@ export class SVGLayer {
             .range(xs.range());
         this.xAxis.scale(xts);
         this.xg.call(this.xAxis);
+
+        this.yAxis.scale(this.model.yScale);
         this.yg.call(this.yAxis);
     }
 

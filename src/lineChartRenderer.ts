@@ -3,7 +3,7 @@ import { vec2, vec3, mat4 } from 'gl-matrix';
 import { RenderModel, DataPoint } from "./renderModel";
 import { LinkedWebGLProgram, throwIfFalsy } from './webGLUtils';
 import { domainSearch } from './utils';
-import { resolveColorRGBA, TimeChartSeriesOptions, ResolvedOptions } from './options';
+import { resolveColorRGBA, TimeChartSeriesOptions, ResolvedRenderOptions } from './options';
 
 const enum VertexAttribLocations {
     DATA_POINT = 0,
@@ -262,9 +262,9 @@ export class LineChartRenderer {
     constructor(
         private model: RenderModel,
         private gl: WebGL2RenderingContext,
-        private options: ResolvedOptions,
+        private options: ResolvedRenderOptions,
     ) {
-        model.onUpdate(() => this.drawFrame());
+        model.updated.on(() => this.drawFrame());
         this.program.use();
     }
 

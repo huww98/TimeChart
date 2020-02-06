@@ -6,14 +6,16 @@ function main() {
     const chart = new TimeChart(el, {
         baseTime: Date.now() - performance.now(),
         series: [{ data }],
-        xRange: { min: 0, max: 20*1000 },
+        xRange: { min: 0, max: 20 * 1000 },
         realTime: true,
         zoom: {
             x: {
                 autoRange: true,
+                minDomainExtent: 50,
             },
             y: {
                 autoRange: true,
+                minDomainExtent: 1,
             }
         },
     });

@@ -1,11 +1,11 @@
 import resolve from '@rollup/plugin-node-resolve'
 import commonjs from '@rollup/plugin-commonjs'
-// import sourceMaps from 'rollup-plugin-sourcemaps'
 import typescript from '@rollup/plugin-typescript'
+import { terser } from "rollup-plugin-terser";
 
 const pkg = require('./package.json')
 
-export default {
+const config = {
     input: `src/index.ts`,
     output: [
         {
@@ -29,3 +29,20 @@ export default {
         resolve(),
     ],
 }
+
+const minConfig = {
+    ...config,
+    output: {
+        ...config.output[0],
+        file: `dist/timechart.min.js`
+    },
+    plugins: [
+        ...config.plugins,
+        terser(),
+    ]
+};
+
+export default [
+    config,
+    minConfig,
+]

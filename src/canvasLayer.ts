@@ -5,7 +5,7 @@ export class CanvasLayer {
     canvas: HTMLCanvasElement
     gl: WebGL2RenderingContext;
 
-    constructor(el: HTMLElement, options: ResolvedRenderOptions, model: RenderModel) {
+    constructor(el: HTMLElement, private options: ResolvedRenderOptions, model: RenderModel) {
         model.updated.on(() => this.clear());
 
         el.style.position = 'relative';
@@ -30,7 +30,7 @@ export class CanvasLayer {
 
     onResize() {
         const canvas = this.canvas;
-        const scale = window.devicePixelRatio;
+        const scale = this.options.pixelRatio;
         canvas.width = canvas.clientWidth * scale;
         canvas.height = canvas.clientHeight * scale;
         this.gl.viewport(0, 0, canvas.width, canvas.height);

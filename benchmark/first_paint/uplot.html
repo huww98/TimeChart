@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Benchmark μPlot first paint</title>
+    <script>
+        console.timeStamp('start');
+    </script>
+    <link rel="stylesheet" href="https://leeoniya.github.io/uPlot/src/uPlot.css">
+</head>
+<body>
+    <div id="chart" style="width: 960px; height: 720px;"></div>
+
+    <script src="https://leeoniya.github.io/uPlot/dist/uPlot.iife.min.js"></script>
+    <script src="../utils.js"></script>
+    <script>
+        console.timeStamp('prepare data');
+        const data = getUPlotData(1000*1000);
+        console.timeStamp('data ready');
+
+        const el = document.getElementById('chart');
+        const opts = {
+            width: 960,
+            height: 720,
+            series: [
+                {},
+                {},
+            ]
+        }
+        const uplot = new uPlot.Line(opts, data, el);
+        console.timeStamp('finish');
+    </script>
+</body>
+</html>

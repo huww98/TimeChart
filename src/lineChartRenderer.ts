@@ -45,8 +45,8 @@ class LineChartWebGLProgram extends LinkedWebGLProgram {
         uLineWidth: WebGLUniformLocation;
         uColor: WebGLUniformLocation;
     };
-    constructor(gl: WebGLRenderingContext) {
-        super(gl, vsSource, fsSource);
+    constructor(gl: WebGLRenderingContext, debug: boolean) {
+        super(gl, vsSource, fsSource, debug);
         this.locations = {
             uModelViewMatrix: throwIfFalsy(gl.getUniformLocation(this.program, 'uModelViewMatrix')),
             uProjectionMatrix: throwIfFalsy(gl.getUniformLocation(this.program, 'uProjectionMatrix')),
@@ -254,7 +254,7 @@ class SeriesVertexArray {
 }
 
 export class LineChartRenderer {
-    private program = new LineChartWebGLProgram(this.gl)
+    private program = new LineChartWebGLProgram(this.gl, this.options.debugWebGL);
     private arrays = new Map<TimeChartSeriesOptions, SeriesVertexArray>();
     private height = 0;
     private width = 0;

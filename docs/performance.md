@@ -28,9 +28,9 @@ Result:
 
 ![Interaction result](./interaction.png)
 
-Using Intel integrated GPU, TimeChart perform comparable with μPlot. Chart.JS is much slower, and it spent time on not rendered points. Using NVIDIA GPU, TimeChart is able to render 20x more data points than μPlot at 60 FPS. On mobile deivce (HUAWEI Mate 20 Android phone), TimeChart also performs better.
+Using Intel integrated GPU, TimeChart performs slightly better than μPlot. Chart.JS is much slower, and it spent time on not rendered points. Using NVIDIA GPU, TimeChart is able to render 20x more data points than μPlot at 60 FPS. On mobile deivce (HUAWEI Mate 20 Android phone), TimeChart also performs better.
 
-Note that TimeChart renders every data points and results in smoother image. See [Render Comparation](#render%20comparation)
+Note that TimeChart renders every data points and results in smoother image. See [Render Comparation](#render-comparation)
 
 ## First Paint Test
 

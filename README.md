@@ -53,7 +53,7 @@ TODO
 
 ### Zoom Options
 
-These options enable the builtin touch / mouse / trackpad [interaction](#Interaction) support.
+These options enable the builtin touch / mouse / trackpad [interaction](#interaction) support.
 
 TODO
 

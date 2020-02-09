@@ -14,15 +14,17 @@ const vsSource = `#version 300 es
 layout (location = ${VertexAttribLocations.DATA_POINT}) in vec2 aDataPoint;
 layout (location = ${VertexAttribLocations.DIR}) in vec2 aDir;
 
-uniform mat4 uModelViewMatrix;
-uniform mat4 uProjectionMatrix;
+uniform vec2 uModelScale;
+uniform vec2 uModelTranslation;
+uniform vec2 uProjectionScale;
 uniform float uLineWidth;
 
 void main() {
-    vec4 cssPose = uModelViewMatrix * vec4(aDataPoint, 0.0, 1.0);
-    vec4 dir = uModelViewMatrix * vec4(aDir, 0.0, 0.0);
+    vec2 cssPose = uModelScale * aDataPoint + uModelTranslation;
+    vec2 dir = uModelScale * aDir;
     dir = normalize(dir);
-    gl_Position = uProjectionMatrix * (cssPose + vec4(-dir.y, dir.x, 0.0, 0.0) * uLineWidth);
+    vec2 pos2d = uProjectionScale * (cssPose + vec2(-dir.y, dir.x) * uLineWidth);
+    gl_Position = vec4(pos2d, 0, 1);
 }
 `;
 
@@ -40,16 +42,18 @@ void main() {
 
 class LineChartWebGLProgram extends LinkedWebGLProgram {
     locations: {
-        uModelViewMatrix: WebGLUniformLocation;
-        uProjectionMatrix: WebGLUniformLocation;
+        uModelScale: WebGLUniformLocation;
+        uModelTranslation: WebGLUniformLocation;
+        uProjectionScale: WebGLUniformLocation;
         uLineWidth: WebGLUniformLocation;
         uColor: WebGLUniformLocation;
     };
     constructor(gl: WebGLRenderingContext, debug: boolean) {
         super(gl, vsSource, fsSource, debug);
         this.locations = {
-            uModelViewMatrix: throwIfFalsy(gl.getUniformLocation(this.program, 'uModelViewMatrix')),
-            uProjectionMatrix: throwIfFalsy(gl.getUniformLocation(this.program, 'uProjectionMatrix')),
+            uModelScale: throwIfFalsy(gl.getUniformLocation(this.program, 'uModelScale')),
+            uModelTranslation: throwIfFalsy(gl.getUniformLocation(this.program, 'uModelTranslation')),
+            uProjectionScale: throwIfFalsy(gl.getUniformLocation(this.program, 'uProjectionScale')),
             uLineWidth: throwIfFalsy(gl.getUniformLocation(this.program, 'uLineWidth')),
             uColor: throwIfFalsy(gl.getUniformLocation(this.program, 'uColor')),
         }
@@ -287,18 +291,8 @@ export class LineChartRenderer {
         vec2.divide(scale, scale, [2, 2])
         vec2.inverse(scale, scale)
 
-        const translate = mat4.create();
-        mat4.fromTranslation(translate, [-1.0, -1.0, 0.0])
-
-        const projectionMatrix = mat4.create();
-        mat4.fromScaling(projectionMatrix, [...scale, 1.0]);
-        mat4.multiply(projectionMatrix, translate, projectionMatrix)
-
         const gl = this.gl;
-        gl.uniformMatrix4fv(
-            this.program.locations.uProjectionMatrix,
-            false,
-            projectionMatrix);
+        gl.uniform2fv(this.program.locations.uProjectionScale, scale);
     }
 
     drawFrame() {
@@ -320,31 +314,25 @@ export class LineChartRenderer {
         }
     }
 
-    private ySvgToCanvas(v: number) {
-        return -v + this.height;
+    private ySvgToView(v: number) {
+        return -v + this.height / 2;
+    }
+
+    private xSvgToView(v: number) {
+        return v - this.width / 2;
     }
 
     syncDomain() {
         const m = this.model;
         const gl = this.gl;
 
-        const zero = [m.xScale(0), this.ySvgToCanvas(m.yScale(0)), 0];
-        const one = [m.xScale(1), this.ySvgToCanvas(m.yScale(1)), 0];
+        const zero = [this.xSvgToView(m.xScale(0)), this.ySvgToView(m.yScale(0))];
+        const one = [this.xSvgToView(m.xScale(1)), this.ySvgToView(m.yScale(1))];
 
-        const modelViewMatrix = mat4.create();
+        const scaling = vec2.create();
+        vec2.subtract(scaling, one, zero);
 
-        const scaling = vec3.create();
-        vec3.subtract(scaling, one, zero);
-        mat4.fromScaling(modelViewMatrix, scaling);
-
-        const translateMat = mat4.create()
-        mat4.fromTranslation(translateMat, zero);
-
-        mat4.multiply(modelViewMatrix, translateMat, modelViewMatrix);
-
-        gl.uniformMatrix4fv(
-            this.program.locations.uModelViewMatrix,
-            false,
-            modelViewMatrix);
+        gl.uniform2fv(this.program.locations.uModelScale, scaling);
+        gl.uniform2fv(this.program.locations.uModelTranslation, zero);
     }
 }

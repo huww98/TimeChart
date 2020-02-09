@@ -18,7 +18,19 @@ This tests the FPS when user is interacting with chart (pan / zoom).
 
 This is the most exciting feature of TimeChart. All data is loaded into GPU memory. Almost all calculation required by pan or zoom is done by GPU, really fast.
 
-TODO
+This test simulates user zooming in the chart 1000 frames.
+
+Method:
+* Open test page in Chrome in-private window (effectively disable all extensions)
+* Wait animation to finish, copy output from console.
+
+Result:
+
+![Interaction result](./interaction.png)
+
+Using Intel integrated GPU, TimeChart perform comparable with μPlot. Chart.JS is much slower, and it spent time on not rendered points. Using NVIDIA GPU, TimeChart is able to render 20x more data points than μPlot at 60 FPS. On mobile deivce (HUAWEI Mate 20 Android phone), TimeChart also performs better.
+
+Note that TimeChart renders every data points and results in smoother image. See [Render Comparation](#render%20comparation)
 
 ## First Paint Test
 
@@ -39,6 +51,8 @@ Result:
 ![First paint result](./first_paint.png)
 
 μPlot is really fast. TimeChart rendering is async, so the scripting time is very short. TimeChart is not very good at this, WebGL initialization takes more time.
+
+## Render Comparation
 
 μPlot and Chart.JS downsamples data on the fly, while TimeChart renders every points. Taking advantages of this and GPU anti-aliasing, TimeChart renders smoother images. The following are images rendered in canvas.
 

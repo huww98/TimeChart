@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Benchmark Chart.JS master interaction</title>
+</head>
+
+<body>
+    <canvas id="chart" width="960" height="720"></canvas>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"></script>
+    <script src="https://www.chartjs.org/dist/master/Chart.js"></script>
+    <script src="../utils.js"></script>
+    <script>
+        const xRange = 500 * 1000
+        const data = getData(xRange);
+
+        const ctx = document.getElementById('chart').getContext('2d');;
+        const opts = {
+            type: 'line',
+            data: {
+                datasets: [
+                    {
+                        label: 'value',
+                        fill: false,
+                        data,
+                    }
+                ]
+            },
+            options: {
+                responsive: false,
+                devicePixelRatio: 1,
+                spanGaps: true,
+                animation: false,
+                parsing: false,
+                elements: {
+                    line: {
+                        tension: 0,
+                        borderColor: 'black',
+                        borderWidth: 1,
+                    },
+                    point: {
+                        radius: 0,
+                        borderWidth: 0,
+                        hoverBorderWidth: 0,
+                    }
+                },
+                scales: {
+                    x: {
+                        type: 'time',
+                        max: xRange * 1000,
+                        min: 0,
+                        ticks: {
+                            maxRotation: 0,
+                            minRotation: 0,
+                            autoSkip: true,
+                            autoSkipPadding: 25,
+                            sampleSize: 1
+                        }
+                    },
+                    y: {
+                        max: 50,
+                        min: -50,
+                    }
+                },
+            }
+        };
+        const chart = new Chart(ctx, opts);
+
+        simulateInteraction(xRange, 1000, 1000, range => {
+            chart.options.scales.x.max = range * 1000;
+            chart.update();
+        });
+    </script>
+</body>
+
+</html>

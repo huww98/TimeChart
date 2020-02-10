@@ -36,7 +36,7 @@ We compare the performance of this library and some other popular libraries. See
   <script src="https://d3js.org/d3-scale.v3.min.js"></script>
   <script src="https://d3js.org/d3-selection.v1.min.js"></script>
   <script src="https://d3js.org/d3-axis.v1.min.js"></script>
-  <script src="https://huww98.github.io/dist/timechart.min.js"></script>
+  <script src="https://huww98.github.io/TimeChart/dist/timechart.min.js"></script>
   ```
 
 ### Basic

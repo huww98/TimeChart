@@ -10,7 +10,7 @@ Flexable. Realtime monitor. High performance interaction.
 
 Taking advantage of the newest WebGL technology, we can directly talk to GPU, pushing the limit of the performance of rendering chart in browser. This library can display almost unlimited data points, and handle user interactions (pan / zoom) at 60 fps.
 
-We compare the performance of this library and some other popular libraries. See [Performance](./docs/performance)
+We compare the performance of this library and some other popular libraries. See [Performance](https://huww98.github.io/TimeChart/docs/performance)
 
 ## Usage
 

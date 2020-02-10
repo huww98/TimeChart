@@ -22,7 +22,7 @@ This test simulates user zooming in the chart 1000 frames.
 
 Method:
 * Open test page in Chrome in-private window (effectively disable all extensions)
-* Wait animation to finish, copy output from console.
+* Wait for the animation to finish, copy output from console.
 
 Result:
 

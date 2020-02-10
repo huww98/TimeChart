@@ -88,7 +88,7 @@ const chart = new TimeChart(el, {
 
   default: 10 / 10 / 45 / 20
 
-* xRange / yRange ({min: number, max: number} | 'auto'): The range of x / y axes. Also use this to control pan / zoom programmatically. Specify `'auto'` to calculate these range from data automatically. Data points outside these range will be drawn in padding area, to display as much data as possible to user.
+* xRange / yRange ({min: number, max: number} or 'auto'): The range of x / y axes. Also use this to control pan / zoom programmatically. Specify `'auto'` to calculate these range from data automatically. Data points outside these range will be drawn in padding area, to display as much data as possible to user.
 
   default: 'auto'
 
@@ -118,7 +118,7 @@ const chart = new TimeChart(el, {
 
 * data ({x: number, y: number}[]): Array of data points to be drawn.
 
-* lineWidth (number | undefined): If undefined, use global option.
+* lineWidth (number or undefined): If undefined, use global option.
 
   default: undefined
 

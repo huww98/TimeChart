@@ -268,8 +268,9 @@ export class LineChartRenderer {
         private gl: WebGL2RenderingContext,
         private options: ResolvedRenderOptions,
     ) {
-        model.updated.on(() => this.drawFrame());
         this.program.use();
+        model.updated.on(() => this.drawFrame());
+        model.resized.on((w, h) => this.onResize(w, h));
     }
 
     syncBuffer() {
@@ -326,11 +327,11 @@ export class LineChartRenderer {
         const m = this.model;
         const gl = this.gl;
 
-        const zero = vec2.fromValues(this.xSvgToView(m.xScale(0)), this.ySvgToView(m.yScale(0)));
-        const one = vec2.fromValues(this.xSvgToView(m.xScale(1)), this.ySvgToView(m.yScale(1)));
+        const zero = [this.xSvgToView(m.xScale(0)), this.ySvgToView(m.yScale(0))];
+        const one = [this.xSvgToView(m.xScale(1)), this.ySvgToView(m.yScale(1))];
 
-        const scaling = vec2.create();
-        vec2.subtract(scaling, one, zero);
+        // Not using vec2 for precision
+        const scaling = [one[0] - zero[0], one[1] - zero[1]]
 
         gl.uniform2fv(this.program.locations.uModelScale, scaling);
         gl.uniform2fv(this.program.locations.uModelTranslation, zero);

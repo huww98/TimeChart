@@ -2,10 +2,12 @@ import { rgb } from 'd3-color';
 
 import { RenderModel, DataPoint } from './renderModel';
 import { LineChartRenderer } from './lineChartRenderer';
-import { TimeChartOptions, TimeChartSeriesOptions, ResolvedOptions, ZoomOptions, ResolvedZoomOptions } from './options';
+import { TimeChartOptions, TimeChartSeriesOptions, ResolvedOptions, ZoomOptions, ResolvedZoomOptions, ResolvedRenderOptions } from './options';
 import { CanvasLayer } from './canvasLayer';
 import { SVGLayer } from './svgLayer';
 import { ChartZoom } from './chartZoom';
+import { D3AxisRenderer } from './d3AxisRenderer';
+import { Legend } from './legend';
 
 const defaultOptions = {
     pixelRatio: window.devicePixelRatio,
@@ -31,10 +33,6 @@ export default class TimeChart {
     public options: ResolvedOptions;
 
     private model: RenderModel;
-    private lineChartRenderer: LineChartRenderer;
-
-    private canvasLayer: CanvasLayer;
-    private svgLayer: SVGLayer;
 
     constructor(private el: HTMLElement, options?: TimeChartOptions) {
         options = options ?? {};
@@ -43,16 +41,19 @@ export default class TimeChart {
             ...defaultSeriesOptions,
             ...s,
         })) ?? [];
-        const renderOptions = {
+        const renderOptions: ResolvedRenderOptions = {
             ...defaultOptions,
             ...options,
             series,
         };
 
         this.model = new RenderModel(renderOptions);
-        this.canvasLayer = new CanvasLayer(el, renderOptions, this.model);
-        this.svgLayer = new SVGLayer(el, renderOptions, this.model);
-        this.lineChartRenderer = new LineChartRenderer(this.model, this.canvasLayer.gl, renderOptions);
+        const canvasLayer = new CanvasLayer(el, renderOptions, this.model);
+        const lineChartRenderer = new LineChartRenderer(this.model, canvasLayer.gl, renderOptions);
+
+        const svgLayer = new SVGLayer(el);
+        const axisRenderer = new D3AxisRenderer(this.model, svgLayer.svgNode, renderOptions);
+        const legend = new Legend(el, renderOptions);
 
         this.options = Object.assign(renderOptions, {
             zoom: this.registerZoom(options.zoom)
@@ -104,12 +105,7 @@ export default class TimeChart {
     }
 
     onResize() {
-        const canvas = this.canvasLayer.canvas;
-        this.model.resize(canvas.clientWidth, canvas.clientHeight);
-        this.svgLayer.onResize();
-        this.canvasLayer.onResize();
-        this.lineChartRenderer.onResize(canvas.clientWidth, canvas.clientHeight);
-        this.update();
+        this.model.resize(this.el.clientWidth, this.el.clientHeight);
     }
 
     update() {

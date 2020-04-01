@@ -3,7 +3,7 @@ import { DIRECTION, ResolvedOptions, CapableElement, dirOptions, Point, Resolved
 import { EventDispatcher } from '../utils';
 
 export class ChartZoomTouch {
-    public scaleUpdated = new EventDispatcher<[]>();
+    public scaleUpdated = new EventDispatcher();
 
     private majorDirection = DIRECTION.UNKNOWN;
     private previousPoints = new Map<number, Point>();

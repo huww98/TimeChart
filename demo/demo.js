@@ -2,10 +2,22 @@ main();
 
 function main() {
     const el = document.getElementById('chart');
-    const data = [];
+    const dataSin = [];
+    const dataCos = [];
     const chart = new TimeChart(el, {
         baseTime: Date.now() - performance.now(),
-        series: [{ data }],
+        series: [
+            {
+                name: 'Sin',
+                data: dataSin,
+            },
+            {
+                name: 'Cos',
+                data: dataCos,
+                lineWidth: 2,
+                color: 'red',
+            },
+        ],
         xRange: { min: 0, max: 20 * 1000 },
         realTime: true,
         zoom: {
@@ -26,10 +38,13 @@ function main() {
         const time = performance.now();
         for (; x < time; x += 1) {
             // const y = Math.random() * 500 + 100;
-            const y = Math.sin(x * 0.002) * 300 + 320;
-            data.push({ x, y });
+            const y_sin = Math.sin(x * 0.002) * 320;
+            dataSin.push({ x, y: y_sin });
+
+            const y_cos = Math.cos(x * 0.002) * 200;
+            dataCos.push({ x, y: y_cos });
         }
-        pointCountEl.innerText = data.length;
+        pointCountEl.innerText = dataSin.length;
         chart.update();
     }
 

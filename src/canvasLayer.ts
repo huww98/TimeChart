@@ -6,8 +6,6 @@ export class CanvasLayer {
     gl: WebGL2RenderingContext;
 
     constructor(el: HTMLElement, private options: ResolvedRenderOptions, model: RenderModel) {
-        model.updated.on(() => this.clear());
-
         el.style.position = 'relative';
         const canvas = document.createElement('canvas');
         canvas.style.width = '100%';
@@ -26,13 +24,16 @@ export class CanvasLayer {
         gl.clearColor(...bgColor);
 
         this.canvas = canvas;
+
+        model.updated.on(() => this.clear());
+        model.resized.on((w, h) => this.onResize(w, h));
     }
 
-    onResize() {
+    onResize(width: number, height: number) {
         const canvas = this.canvas;
         const scale = this.options.pixelRatio;
-        canvas.width = canvas.clientWidth * scale;
-        canvas.height = canvas.clientHeight * scale;
+        canvas.width = width * scale;
+        canvas.height = height * scale;
         this.gl.viewport(0, 0, canvas.width, canvas.height);
     }
 

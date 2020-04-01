@@ -16,7 +16,7 @@ export class ChartZoom {
     private touch: ChartZoomTouch;
     private mouse: ChartZoomMouse;
     private wheel: ChartZoomWheel;
-    private scaleUpdated = new EventDispatcher<[]>();
+    private scaleUpdated = new EventDispatcher();
 
     constructor(el: CapableElement, options?: ChartZoomOptions) {
         options = options ?? {};

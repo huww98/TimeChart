@@ -39,13 +39,17 @@ export class RenderModel {
         }
     }
 
+    resized = new EventDispatcher<(width: number, height: number) => void>();
     resize(width: number, height: number) {
         const op = this.options;
         this.xScale.range([op.paddingLeft, width - op.paddingRight]);
         this.yScale.range([height - op.paddingBottom, op.paddingTop]);
+
+        this.resized.dispatch(width, height)
+        this.requestRedraw()
     }
 
-    updated = new EventDispatcher<[]>();
+    updated = new EventDispatcher();
 
     update() {
         for (const s of this.options.series) {

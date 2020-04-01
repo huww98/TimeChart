@@ -3,7 +3,7 @@ import { scaleK, applyNewDomain } from './utils';
 import { EventDispatcher } from '../utils';
 
 export class ChartZoomMouse {
-    public scaleUpdated = new EventDispatcher<[]>();
+    public scaleUpdated = new EventDispatcher();
     private previousPoint: Point | null = null;
 
     constructor(private el: CapableElement, private options: ResolvedOptions) {

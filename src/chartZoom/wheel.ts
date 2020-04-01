@@ -3,7 +3,7 @@ import { EventDispatcher } from '../utils'
 import { scaleK, applyNewDomain, clamp } from './utils';
 
 export class ChartZoomWheel {
-    public scaleUpdated = new EventDispatcher<[]>();
+    public scaleUpdated = new EventDispatcher();
 
     constructor(private el: CapableElement, private options: ResolvedOptions) {
         el.addEventListener('wheel', ev => this.onWheel(ev));

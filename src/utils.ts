@@ -32,12 +32,14 @@ export function domainSearch<T>(data: ArrayLike<T>, start: number, end: number, 
     return end;
 }
 
-export class EventDispatcher<TArgs extends Array<any>>  {
-    private callbacks: Array<(...args: TArgs) => void> = []
-    on(callback: (...args: TArgs) => void) {
+type CbParameters<T extends (...args: Array<any>) => void> = T extends (...args: infer P) => void ? P : never;
+
+export class EventDispatcher<TCb extends (...args: Array<any>) => void = (() => void)>  {
+    private callbacks: Array<TCb> = []
+    on(callback: TCb) {
         this.callbacks.push(callback);
     }
-    dispatch(...args: TArgs) {
+    dispatch(...args: CbParameters<TCb>) {
         for (const cb of this.callbacks) {
             cb(...args);
         }

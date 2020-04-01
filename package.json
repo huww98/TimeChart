@@ -1,6 +1,6 @@
 {
     "name": "timechart",
-    "version": "0.0.1",
+    "version": "0.1.0",
     "description": "An chart library specialized for large-scale time-series data, built on WebGL.",
     "repository": {
         "url": "https://github.com/huww98/TimeChart.git",
@@ -14,7 +14,7 @@
     ],
     "scripts": {
         "demo": "http-server -c1 -o /demo/index.html",
-        "build": "tsc && rollup -c",
+        "build": "tsc --outDir dist/lib --declarationDir dist/types --declaration true && rollup -c",
         "start": "rollup -c -w",
         "test": "jest"
     },
@@ -32,17 +32,17 @@
     "devDependencies": {
         "@rollup/plugin-commonjs": "^11.0.1",
         "@rollup/plugin-node-resolve": "^7.0.0",
-        "@rollup/plugin-typescript": "^2.1.0",
+        "@rollup/plugin-typescript": "^4.0.0",
         "@types/d3-axis": "^1.0.12",
         "@types/d3-color": "^1.2.2",
         "@types/d3-scale": "^2.1.1",
         "@types/d3-selection": "^1.4.1",
         "@types/d3-zoom": "^1.7.4",
         "@types/gl-matrix": "^2.4.5",
-        "@types/jest": "^24.9.1",
+        "@types/jest": "^25.1.4",
         "http-server": "^0.12.1",
         "jest": "^25.1.0",
-        "rollup": "^1.29.1",
+        "rollup": "^2.3.2",
         "rollup-plugin-terser": "^5.2.0",
         "ts-jest": "^25.0.0",
         "typescript": "^3.7.5"

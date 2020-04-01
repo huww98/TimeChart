@@ -5,14 +5,11 @@
         "importHelpers": true,
         "module": "es2015",
         "sourceMap": true,
-        "declaration": true,
         "types": [],
         "strict": true,
         "esModuleInterop": true,
         "allowSyntheticDefaultImports": true,
         "forceConsistentCasingInFileNames": true,
-        "declarationDir": "dist/types",
-        "outDir": "dist/lib"
     },
     "include": [
         "src"

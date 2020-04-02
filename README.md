@@ -16,7 +16,7 @@ We compare the performance of this library and some other popular libraries. See
 
 ### Installation
 
-* Use npm (not avalable yet)
+* Use npm
 
   ```shell
   npm install timechart

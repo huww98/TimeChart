@@ -1,5 +1,7 @@
 # Time Chart
 
+[![npm version](https://img.shields.io/npm/v/timechart.svg)](https://www.npmjs.com/package/timechart)
+
 An chart library specialized for large-scale time-series data, built on WebGL.
 
 Flexable. Realtime monitor. High performance interaction.

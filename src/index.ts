@@ -5,9 +5,12 @@ import { LineChartRenderer } from './lineChartRenderer';
 import { TimeChartOptions, TimeChartSeriesOptions, ResolvedOptions, ZoomOptions, ResolvedZoomOptions, ResolvedRenderOptions } from './options';
 import { CanvasLayer } from './canvasLayer';
 import { SVGLayer } from './svgLayer';
+import { ContentBoxDetector } from "./contentBoxDetector";
 import { ChartZoom } from './chartZoom';
 import { D3AxisRenderer } from './d3AxisRenderer';
 import { Legend } from './legend';
+import { Crosshair } from './crosshair';
+import { NearestPoint } from './nearestPoint';
 
 const defaultOptions = {
     pixelRatio: window.devicePixelRatio,
@@ -52,8 +55,11 @@ export default class TimeChart {
         const lineChartRenderer = new LineChartRenderer(this.model, canvasLayer.gl, renderOptions);
 
         const svgLayer = new SVGLayer(el);
+        const contentBoxDetector = new ContentBoxDetector(el, renderOptions);
         const axisRenderer = new D3AxisRenderer(this.model, svgLayer.svgNode, renderOptions);
         const legend = new Legend(el, renderOptions);
+        const crosshair = new Crosshair(svgLayer, this.model, renderOptions, contentBoxDetector);
+        const nearestPoint = new NearestPoint(svgLayer, this.model, renderOptions, contentBoxDetector);
 
         this.options = Object.assign(renderOptions, {
             zoom: this.registerZoom(options.zoom)

@@ -16,7 +16,8 @@
         "demo": "http-server -c1 -o /demo/index.html",
         "build": "tsc --outDir dist/lib --declarationDir dist/types --declaration true && rollup -c",
         "start": "rollup -c -w",
-        "test": "jest"
+        "test": "jest",
+        "prepare": "npm run build"
     },
     "author": "huww98 <huww98@outlook.com>",
     "license": "MIT",

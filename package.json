@@ -7,7 +7,7 @@
         "type": "git"
     },
     "main": "dist/timechart.umd.js",
-    "module": "dist/timechart.es5.js",
+    "module": "dist/lib/index.js",
     "types": "dist/types/index.d.ts",
     "files": [
         "dist"

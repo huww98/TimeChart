@@ -41,7 +41,14 @@ jobs:
         with:
           node-version: 12
           registry-url: https://npm.pkg.github.com/
-      - run: npm ci
+      - run: |
+          npm ci
+          node <<EOF
+            const pkg = require('./package.json');
+            pkg.name = '@huww98/' + pkg.name;
+            const fs = require('fs');
+            fs.writeFileSync('./package.json', JSON.stringify(pkg, null, 4));
+          EOF
       - run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}

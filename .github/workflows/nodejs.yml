@@ -1,4 +1,4 @@
-name: Node CI to GitHub pages
+name: GitHub Pages
 
 on:
   push:
@@ -11,27 +11,29 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-      with:
-        fetch-depth: 10
-    - run: |
-        git config user.email "github-action@huww98.cn"
-        git config user.name "GitHub Action"
-        git fetch --depth 10 origin gh-pages
-        git tag pushed
-        git checkout gh-pages
-        git merge pushed
-    - uses: actions/setup-node@v1
-    - name: Build to GitHub pages.
-      run: |
-        rm -rf ./dist
-        npm ci
-        npm run build
-        npm test
-        git add -f ./dist
-        if ! git diff --cached --exit-code > /dev/null ; then
-          git commit -m "New build"
-        fi
-        git push
-      env:
-        CI: true
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 10
+      - run: |
+          git config user.email "github-action@huww98.cn"
+          git config user.name "GitHub Action"
+          git fetch --depth 10 origin gh-pages
+          git tag pushed
+          git checkout gh-pages
+          git merge pushed
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 12
+      - name: Build to GitHub pages.
+        run: |
+          rm -rf ./dist
+          npm ci
+          npm run build
+          npm test
+          git add -f ./dist
+          if ! git diff --cached --exit-code > /dev/null ; then
+            git commit -m "New build"
+          fi
+          git push
+        env:
+          CI: true

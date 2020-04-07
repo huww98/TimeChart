@@ -10,7 +10,7 @@ import { ChartZoom } from './chartZoom';
 import { D3AxisRenderer } from './d3AxisRenderer';
 import { Legend } from './legend';
 import { Crosshair } from './crosshair';
-import { NearestPoint } from './nearestPoint';
+import { NearestPoint, NearestPointModel } from './nearestPoint';
 
 const defaultOptions = {
     pixelRatio: window.devicePixelRatio,
@@ -59,7 +59,8 @@ export default class TimeChart {
         const axisRenderer = new D3AxisRenderer(this.model, svgLayer.svgNode, renderOptions);
         const legend = new Legend(el, renderOptions);
         const crosshair = new Crosshair(svgLayer, this.model, renderOptions, contentBoxDetector);
-        const nearestPoint = new NearestPoint(svgLayer, this.model, renderOptions, contentBoxDetector);
+        const nearestPointModel = new NearestPointModel(canvasLayer, this.model, renderOptions, contentBoxDetector);
+        const nearestPoint = new NearestPoint(svgLayer, renderOptions, nearestPointModel);
 
         this.options = Object.assign(renderOptions, {
             zoom: this.registerZoom(options.zoom)

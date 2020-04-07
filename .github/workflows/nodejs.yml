@@ -21,9 +21,6 @@ jobs:
           git tag pushed
           git checkout gh-pages
           git merge pushed
-      - uses: actions/setup-node@v1
-        with:
-          node-version: 12
       - name: Build to GitHub pages.
         run: |
           rm -rf ./dist

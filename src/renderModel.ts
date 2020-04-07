@@ -119,4 +119,11 @@ export class RenderModel {
             this.update();
         });
     }
+
+    pxPoint(dataPoint: DataPoint) {
+        return {
+            x: this.xScale(dataPoint.x),
+            y: this.yScale(dataPoint.y),
+        }
+    }
 }

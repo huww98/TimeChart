@@ -14,13 +14,22 @@ jobs:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 10
-      - run: |
+      - name: Merge changes to gh-pages
+        run: |
           git config user.email "github-action@huww98.cn"
           git config user.name "GitHub Action"
           git fetch --depth 10 origin gh-pages
           git tag pushed
           git checkout gh-pages
           git merge pushed
+      - name: Cache node modules
+        uses: actions/cache@v1
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-timechart-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-timechart-
+            ${{ runner.os }}-npm-
       - name: Build to GitHub pages.
         run: |
           rm -rf ./dist

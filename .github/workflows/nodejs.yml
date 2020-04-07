@@ -34,7 +34,6 @@ jobs:
         run: |
           rm -rf ./dist
           npm ci
-          npm run build
           npm test
           git add -f ./dist
           if ! git diff --cached --exit-code > /dev/null ; then

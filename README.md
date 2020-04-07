@@ -1,6 +1,7 @@
 # Time Chart
 
 [![npm version](https://img.shields.io/npm/v/timechart.svg)](https://www.npmjs.com/package/timechart)
+[![GitHub Pages](https://github.com/huww98/TimeChart/workflows/GitHub%20Pages/badge.svg)](https://huww98.github.io/TimeChart/)
 
 An chart library specialized for large-scale time-series data, built on WebGL.
 

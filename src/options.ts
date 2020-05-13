@@ -64,6 +64,7 @@ export interface TimeChartSeriesOptions {
     lineWidth?: number;
     name: string;
     color: ColorSpecifier;
+    _complete: true;
 }
 
 export function resolveColorRGBA(color: ColorSpecifier): [number, number, number, number] {

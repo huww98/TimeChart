@@ -37,13 +37,18 @@ export default class TimeChart {
 
     private model: RenderModel;
 
-    constructor(private el: HTMLElement, options?: TimeChartOptions) {
-        options = options ?? {};
-        const series: TimeChartSeriesOptions[] = options.series?.map(s => ({
+    private completeSeriesOptions(s: Partial<TimeChartSeriesOptions>): TimeChartSeriesOptions {
+        return {
             data: [] as DataPoint[],
             ...defaultSeriesOptions,
             ...s,
-        })) ?? [];
+            _complete: true,
+        }
+    }
+
+    constructor(private el: HTMLElement, options?: TimeChartOptions) {
+        options = options ?? {};
+        const series = options.series?.map(s => this.completeSeriesOptions(s)) ?? [];
         const renderOptions: ResolvedRenderOptions = {
             ...defaultOptions,
             ...options,
@@ -57,7 +62,7 @@ export default class TimeChart {
         const svgLayer = new SVGLayer(el);
         const contentBoxDetector = new ContentBoxDetector(el, renderOptions);
         const axisRenderer = new D3AxisRenderer(this.model, svgLayer.svgNode, renderOptions);
-        const legend = new Legend(el, renderOptions);
+        const legend = new Legend(el, this.model, renderOptions);
         const crosshair = new Crosshair(svgLayer, this.model, renderOptions, contentBoxDetector);
         const nearestPointModel = new NearestPointModel(canvasLayer, this.model, renderOptions, contentBoxDetector);
         const nearestPoint = new NearestPoint(svgLayer, renderOptions, nearestPointModel);
@@ -116,6 +121,14 @@ export default class TimeChart {
     }
 
     update() {
+        // fix dynamic added series
+        for (let i = 0; i < this.options.series.length; i++) {
+            const s = this.options.series[i];
+            if (!s._complete) {
+                this.options.series[i] = this.completeSeriesOptions(s);
+            }
+        }
+
         this.model.requestRedraw();
     }
 }

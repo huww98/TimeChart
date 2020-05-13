@@ -41,7 +41,7 @@ export class NearestPointModel {
         } else {
             const domain = this.model.xScale.invert(this.lastX);
             for (const s of this.options.series) {
-                if (s.data.length == 0) {
+                if (s.data.length == 0 || !s.visible) {
                     this.points.delete(s);
                     continue;
                 }

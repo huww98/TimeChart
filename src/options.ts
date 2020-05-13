@@ -64,6 +64,7 @@ export interface TimeChartSeriesOptions {
     lineWidth?: number;
     name: string;
     color: ColorSpecifier;
+    visible: boolean;
     _complete: true;
 }
 

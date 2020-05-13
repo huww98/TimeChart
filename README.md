@@ -133,6 +133,10 @@ const chart = new TimeChart(el, {
 
   default: d3.rgb(0, 0, 0, 1)
 
+* visible (boolean): Whether this series is visible
+
+  default: true
+
 ### Zoom Options
 
 These options enable the builtin touch / mouse / trackpad [interaction](#interaction) support. The x, y axis can be enabled separately.

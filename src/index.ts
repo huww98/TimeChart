@@ -30,6 +30,7 @@ const defaultOptions = {
 const defaultSeriesOptions = {
     color: rgb(0, 0, 0, 1),
     name: '',
+    visible: true,
 } as const;
 
 export default class TimeChart {

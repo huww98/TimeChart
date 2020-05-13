@@ -301,6 +301,9 @@ export class LineChartRenderer {
         this.syncDomain();
         const gl = this.gl;
         for (const [ds, arr] of this.arrays) {
+            if (!ds.visible) {
+                continue;
+            }
             const color = resolveColorRGBA(ds.color);
             gl.uniform4fv(this.program.locations.uColor, color);
 

@@ -29,6 +29,10 @@ export class Legend {
             flex-flow: row nowrap;
             align-items: center;
         }
+        .timechart-legend .item:not(.visible) {
+            color: gray;
+            text-decoration: line-through;
+        }
         .timechart-legend .item .example {
             width: 50px;
             margin-right: 10px;
@@ -48,21 +52,22 @@ export class Legend {
 
     update() {
         for (const s of this.options.series) {
-            if (this.items.has(s)) {
-                continue;
+            if (!this.items.has(s)) {
+                const item = document.createElement('div');
+                item.className = 'item';
+                const example = document.createElement('div');
+                example.className = 'example';
+                example.style.height = `${s.lineWidth ?? this.options.lineWidth}px`;
+                example.style.backgroundColor = s.color.toString();
+                item.appendChild(example);
+                const name = document.createElement('label');
+                name.textContent = s.name;
+                item.appendChild(name);
+                this.itemContainer.appendChild(item);
+                this.items.set(s, item);
             }
-            const item = document.createElement('div');
-            item.className = 'item';
-            const example = document.createElement('div');
-            example.className = 'example';
-            example.style.height = `${s.lineWidth ?? this.options.lineWidth}px`;
-            example.style.backgroundColor = s.color.toString();
-            item.appendChild(example);
-            const name = document.createElement('label');
-            name.textContent = s.name;
-            item.appendChild(name);
-            this.itemContainer.appendChild(item);
-            this.items.set(s, item);
+            const item = this.items.get(s)!;
+            item.classList.toggle('visible', s.visible)
         }
     }
 }

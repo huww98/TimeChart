@@ -41,6 +41,10 @@ export class NearestPointModel {
         } else {
             const domain = this.model.xScale.invert(this.lastX);
             for (const s of this.options.series) {
+                if (s.data.length == 0) {
+                    this.points.delete(s);
+                    continue;
+                }
                 const pos = domainSearch(s.data, 0, s.data.length, domain, d => d.x);
                 const near: typeof s.data = [];
                 if (pos > 0) {

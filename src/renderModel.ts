@@ -52,6 +52,11 @@ export class RenderModel {
     updated = new EventDispatcher();
 
     update() {
+        this.updateModel();
+        this.updated.dispatch();
+    }
+
+    updateModel() {
         for (const s of this.options.series) {
             if (!this.seriesInfo.has(s)) {
                 this.seriesInfo.set(s, {
@@ -104,8 +109,6 @@ export class RenderModel {
                 this.yScale.domain([opYRange.min, opYRange.max])
             }
         }
-
-        this.updated.dispatch();
     }
 
     private redrawRequested = false;

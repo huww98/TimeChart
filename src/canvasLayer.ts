@@ -17,16 +17,24 @@ export class CanvasLayer {
         if (!ctx) {
             throw new Error('Unable to initialize WebGL. Your browser or machine may not support it.');
         }
-        const gl = ctx;
-        this.gl = gl;
+        this.gl = ctx;
 
         const bgColor = resolveColorRGBA(options.backgroundColor);
-        gl.clearColor(...bgColor);
+        ctx.clearColor(...bgColor);
 
         this.canvas = canvas;
 
         model.updated.on(() => this.clear());
         model.resized.on((w, h) => this.onResize(w, h));
+        model.disposing.on(() => {
+            el.removeChild(canvas);
+            canvas.width = 0;
+            canvas.height = 0;
+            const lossContext = ctx.getExtension('WEBGL_lose_context');
+            if (lossContext) {
+                lossContext.loseContext();
+            }
+        })
     }
 
     onResize(width: number, height: number) {

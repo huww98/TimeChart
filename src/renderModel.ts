@@ -50,6 +50,15 @@ export class RenderModel {
     }
 
     updated = new EventDispatcher();
+    disposing = new EventDispatcher();
+    private disposed = false;
+
+    dispose() {
+        if (!this.disposed) {
+            this.disposing.dispatch();
+            this.disposed = true;
+        }
+    }
 
     update() {
         this.updateModel();
@@ -119,7 +128,9 @@ export class RenderModel {
         this.redrawRequested = true;
         requestAnimationFrame((time) => {
             this.redrawRequested = false;
-            this.update();
+            if (!this.disposed) {
+                this.update();
+            }
         });
     }
 

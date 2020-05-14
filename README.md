@@ -119,7 +119,7 @@ const chart = new TimeChart(el, {
 });
 ```
 
-* data ({x: number, y: number}[]): Array of data points to be drawn.
+* data ({x: number, y: number}[]): Array of data points to be drawn. `x` is the time elapsed in millisecond since `baseTime`
 
 * lineWidth (number or undefined): If undefined, use global option.
 
@@ -167,6 +167,12 @@ const chart = new TimeChart(el, {
 * maxDomainExtent / minDomainExtent (number): The limit of `max - min` in xRange / yRange
 
   default: Infinity / 0
+
+# Methods
+
+* `chart.update()`: Request update after some options have been changed. You can call this as many times as needed. The actual update will only happen once per frame.
+
+* `chart.dispose()`: Dispose all the resources used by this chart instance.
 
 ## Interaction
 

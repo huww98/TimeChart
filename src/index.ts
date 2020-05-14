@@ -37,6 +37,7 @@ export default class TimeChart {
     public options: ResolvedOptions;
 
     private model: RenderModel;
+    private disposed = false;
 
     private completeSeriesOptions(s: Partial<TimeChartSeriesOptions>): TimeChartSeriesOptions {
         return {
@@ -60,8 +61,8 @@ export default class TimeChart {
         const canvasLayer = new CanvasLayer(el, renderOptions, this.model);
         const lineChartRenderer = new LineChartRenderer(this.model, canvasLayer.gl, renderOptions);
 
-        const svgLayer = new SVGLayer(el);
-        const contentBoxDetector = new ContentBoxDetector(el, renderOptions);
+        const svgLayer = new SVGLayer(el, this.model);
+        const contentBoxDetector = new ContentBoxDetector(el, this.model, renderOptions);
         const axisRenderer = new D3AxisRenderer(this.model, svgLayer.svgNode, renderOptions);
         const legend = new Legend(el, this.model, renderOptions);
         const crosshair = new Crosshair(svgLayer, this.model, renderOptions, contentBoxDetector);
@@ -72,7 +73,12 @@ export default class TimeChart {
             zoom: this.registerZoom(options.zoom)
         });
         this.onResize();
-        window.addEventListener('resize', () => this.onResize());
+
+        const resizeHandler = () => this.onResize()
+        window.addEventListener('resize', resizeHandler);
+        this.model.disposing.on(() => {
+            window.removeEventListener('resize', resizeHandler);
+        })
     }
 
     private registerZoom(zoomOptions: ZoomOptions | undefined) {
@@ -122,6 +128,10 @@ export default class TimeChart {
     }
 
     update() {
+        if (this.disposed) {
+            throw new Error('Cannot update after dispose.');
+        }
+
         // fix dynamic added series
         for (let i = 0; i < this.options.series.length; i++) {
             const s = this.options.series[i];
@@ -131,5 +141,10 @@ export default class TimeChart {
         }
 
         this.model.requestRedraw();
+    }
+
+    dispose() {
+        this.model.dispose();
+        this.disposed = true;
     }
 }

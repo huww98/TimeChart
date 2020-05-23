@@ -6,7 +6,7 @@ export class Legend {
     items = new Map<TimeChartSeriesOptions, { item: HTMLElement; example: HTMLElement; }>();
     itemContainer: Node;
 
-    constructor(private el: HTMLElement, model: RenderModel, private options: ResolvedRenderOptions) {
+    constructor(private el: HTMLElement, private model: RenderModel, private options: ResolvedRenderOptions) {
         el.style.position = 'relative'
         this.legend = document.createElement('chart-legend');
         const ls = this.legend.style;
@@ -28,6 +28,7 @@ export class Legend {
             display: flex;
             flex-flow: row nowrap;
             align-items: center;
+            user-select: none;
         }
         .item:not(.visible) {
             color: gray;
@@ -62,6 +63,12 @@ export class Legend {
                 name.textContent = s.name;
                 item.appendChild(name);
                 this.itemContainer.appendChild(item);
+
+                item.addEventListener('click', (ev) => {
+                    s.visible = !s.visible;
+                    this.model.update();
+                })
+
                 this.items.set(s, {item, example});
             }
             const item = this.items.get(s)!;

@@ -3,8 +3,8 @@ import { RenderModel } from './renderModel';
 
 export class Legend {
     legend: HTMLElement;
-    items = new Map<TimeChartSeriesOptions, HTMLElement>();
-    itemContainer: HTMLElement;
+    items = new Map<TimeChartSeriesOptions, { item: HTMLElement; example: HTMLElement; }>();
+    itemContainer: Node;
 
     constructor(private el: HTMLElement, model: RenderModel, private options: ResolvedRenderOptions) {
         el.style.position = 'relative'
@@ -18,34 +18,30 @@ export class Legend {
 
         const style = document.createElement('style');
         style.textContent = `
-        .timechart-legend.border {
+        :host {
             background: white;
             border: 1px solid hsl(0, 0%, 80%);
             border-radius: 3px;
             padding: 5px 10px;
         }
-        .timechart-legend .item {
+        .item {
             display: flex;
             flex-flow: row nowrap;
             align-items: center;
         }
-        .timechart-legend .item:not(.visible) {
+        .item:not(.visible) {
             color: gray;
             text-decoration: line-through;
         }
-        .timechart-legend .item .example {
+        .item .example {
             width: 50px;
             margin-right: 10px;
             max-height: 1em;
         }`;
         legendRoot.appendChild(style);
 
-        const border = document.createElement('div');
-        border.className = 'timechart-legend border';
-
-        this.itemContainer = border;
+        this.itemContainer = legendRoot;
         this.update();
-        legendRoot.appendChild(border);
         el.appendChild(this.legend);
         model.updated.on(() => this.update());
 
@@ -61,17 +57,17 @@ export class Legend {
                 item.className = 'item';
                 const example = document.createElement('div');
                 example.className = 'example';
-                example.style.height = `${s.lineWidth ?? this.options.lineWidth}px`;
-                example.style.backgroundColor = s.color.toString();
                 item.appendChild(example);
                 const name = document.createElement('label');
                 name.textContent = s.name;
                 item.appendChild(name);
                 this.itemContainer.appendChild(item);
-                this.items.set(s, item);
+                this.items.set(s, {item, example});
             }
             const item = this.items.get(s)!;
-            item.classList.toggle('visible', s.visible)
+            item.item.classList.toggle('visible', s.visible);
+            item.example.style.height = `${s.lineWidth ?? this.options.lineWidth}px`;
+            item.example.style.backgroundColor = s.color.toString();
         }
     }
 }

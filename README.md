@@ -85,7 +85,7 @@ const chart = new TimeChart(el, {
 
 * backgroundColor (CSS color specifier or [d3-color](https://github.com/d3/d3-color) instance)
 
-  default: d3.rgb(255, 255, 255, 1)
+  default: 'transparent'
 
 * paddingTop / paddingRight / paddingLeft / paddingBottom (number): Padding to add to chart area in CSS pixel. Also reverse space for axes.
 

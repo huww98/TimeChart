@@ -17,7 +17,7 @@ const config = {
             format: 'umd',
             sourcemap: true
         },
-        { file: pkg.module, format: 'es', sourcemap: true },
+        { file: 'dist/timechart.module.js', format: 'es', sourcemap: true },
     ],
     external: (id) => id.startsWith('d3-'),
     watch: {

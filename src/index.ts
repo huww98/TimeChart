@@ -26,6 +26,7 @@ const defaultOptions = {
     realTime: false,
     baseTime: 0,
     debugWebGL: false,
+    forceWebGL1: false,
 } as const;
 
 const defaultSeriesOptions = {

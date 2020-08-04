@@ -5,6 +5,8 @@ function main() {
     const dataSin = [];
     const dataCos = [];
     const chart = new TimeChart(el, {
+        // debugWebGL: true,
+        // forceWebGL1: true,
         baseTime: Date.now() - performance.now(),
         series: [
             {

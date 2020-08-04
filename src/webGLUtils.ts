@@ -1,12 +1,22 @@
 export class LinkedWebGLProgram {
     program: WebGLProgram;
 
-    constructor(private gl: WebGLRenderingContext, vertexSource: string, fragmentSource: string, debug: boolean) {
+    constructor(
+        private gl: WebGLRenderingContext,
+        vertexSource: string, fragmentSource: string,
+        public readonly debug: boolean
+    ) {
         const program = throwIfFalsy(gl.createProgram());
         gl.attachShader(program, throwIfFalsy(createShader(gl, gl.VERTEX_SHADER, vertexSource, debug)));
         gl.attachShader(program, throwIfFalsy(createShader(gl, gl.FRAGMENT_SHADER, fragmentSource, debug)));
+        this.program = program
+    }
+
+    link() {
+        const gl = this.gl;
+        const program = this.program;
         gl.linkProgram(program);
-        if (debug) {
+        if (this.debug) {
             const success = gl.getProgramParameter(program, gl.LINK_STATUS);
             if (!success) {
                 const message = gl.getProgramInfoLog(program) ?? 'Unknown Error.';
@@ -14,8 +24,6 @@ export class LinkedWebGLProgram {
                 throw new Error(message);
             }
         }
-
-        this.program = program
     }
 
     public use() {

@@ -10,10 +10,8 @@ const enum VertexAttribLocations {
     DIR = 1,
 }
 
-const vsSource = `#version 300 es
-layout (location = ${VertexAttribLocations.DATA_POINT}) in vec2 aDataPoint;
-layout (location = ${VertexAttribLocations.DIR}) in vec2 aDir;
-
+function vsSource(gl: WebGL2RenderingContext | WebGLRenderingContext) {
+    const body = `
 uniform vec2 uModelScale;
 uniform vec2 uModelTranslation;
 uniform vec2 uProjectionScale;
@@ -25,20 +23,41 @@ void main() {
     dir = normalize(dir);
     vec2 pos2d = uProjectionScale * (cssPose + vec2(-dir.y, dir.x) * uLineWidth);
     gl_Position = vec4(pos2d, 0, 1);
+}`;
+
+    if (gl instanceof WebGL2RenderingContext) {
+        return `#version 300 es
+layout (location = ${VertexAttribLocations.DATA_POINT}) in vec2 aDataPoint;
+layout (location = ${VertexAttribLocations.DIR}) in vec2 aDir;
+${body}`;
+    } else {
+        return `
+attribute vec2 aDataPoint;
+attribute vec2 aDir;
+${body}`;
+    }
 }
+
+function fsSource(gl: WebGL2RenderingContext | WebGLRenderingContext) {
+    const body = `
 `;
-
-const fsSource = `#version 300 es
+    if (gl instanceof WebGL2RenderingContext) {
+        return `#version 300 es
 precision lowp float;
-
 uniform vec4 uColor;
-
 out vec4 outColor;
-
 void main() {
     outColor = uColor;
+}`;
+    } else {
+        return `
+precision lowp float;
+uniform vec4 uColor;
+void main() {
+    gl_FragColor = uColor;
+}`;
+    }
 }
-`;
 
 class LineChartWebGLProgram extends LinkedWebGLProgram {
     locations: {
@@ -48,14 +67,24 @@ class LineChartWebGLProgram extends LinkedWebGLProgram {
         uLineWidth: WebGLUniformLocation;
         uColor: WebGLUniformLocation;
     };
-    constructor(gl: WebGLRenderingContext, debug: boolean) {
-        super(gl, vsSource, fsSource, debug);
+    constructor(gl: WebGL2RenderingContext | WebGLRenderingContext, debug: boolean) {
+        super(gl, vsSource(gl), fsSource(gl), debug);
+
+        if (gl instanceof WebGLRenderingContext) {
+            gl.bindAttribLocation(this.program, VertexAttribLocations.DATA_POINT, 'aDataPoint');
+            gl.bindAttribLocation(this.program, VertexAttribLocations.DIR, 'aDir');
+        }
+
+        this.link();
+
+        const getLoc = (name: string) => throwIfFalsy(gl.getUniformLocation(this.program, name));
+
         this.locations = {
-            uModelScale: throwIfFalsy(gl.getUniformLocation(this.program, 'uModelScale')),
-            uModelTranslation: throwIfFalsy(gl.getUniformLocation(this.program, 'uModelTranslation')),
-            uProjectionScale: throwIfFalsy(gl.getUniformLocation(this.program, 'uProjectionScale')),
-            uLineWidth: throwIfFalsy(gl.getUniformLocation(this.program, 'uLineWidth')),
-            uColor: throwIfFalsy(gl.getUniformLocation(this.program, 'uColor')),
+            uModelScale: getLoc('uModelScale'),
+            uModelTranslation: getLoc('uModelTranslation'),
+            uProjectionScale: getLoc('uProjectionScale'),
+            uLineWidth: getLoc('uLineWidth'),
+            uColor: getLoc('uColor'),
         }
     }
 }
@@ -67,8 +96,51 @@ const BYTES_PER_POINT = INDEX_PER_POINT * Float32Array.BYTES_PER_ELEMENT;
 const BUFFER_DATA_POINT_CAPACITY = 128 * 1024;
 const BUFFER_CAPACITY = BUFFER_DATA_POINT_CAPACITY * INDEX_PER_DATAPOINT + 2 * POINT_PER_DATAPOINT;
 
-class VertexArray {
-    vao: WebGLVertexArrayObject;
+interface IVAO {
+    bind(): void;
+    clear(): void;
+}
+
+class WebGL2VAO implements IVAO {
+    private vao: WebGLVertexArrayObject;
+    constructor(private gl: WebGL2RenderingContext) {
+        this.vao = throwIfFalsy(gl.createVertexArray());
+        this.bind();
+    }
+    bind() {
+        this.gl.bindVertexArray(this.vao);
+    }
+    clear() {
+        this.gl.deleteVertexArray(this.vao);
+    }
+}
+
+class OESVAO implements IVAO {
+    vao: WebGLVertexArrayObjectOES;
+    constructor(private vaoExt: OES_vertex_array_object) {
+        this.vao = throwIfFalsy(vaoExt.createVertexArrayOES());
+        this.bind();
+    }
+    bind() {
+        this.vaoExt.bindVertexArrayOES(this.vao);
+    }
+    clear() {
+        this.vaoExt.deleteVertexArrayOES(this.vao);
+    }
+}
+
+class WebGL1BufferInfo implements IVAO {
+    constructor(private bindFunc: () => void) {
+    }
+    bind() {
+        this.bindFunc();
+    }
+    clear() {
+    }
+}
+
+class SeriesSegmentVertexArray {
+    vao: IVAO;
     dataBuffer: WebGLBuffer;
     length = 0;
 
@@ -76,26 +148,33 @@ class VertexArray {
      * @param firstDataPointIndex At least 1, since datapoint 0 has no path to draw.
      */
     constructor(
-        private gl: WebGL2RenderingContext,
+        private gl: WebGL2RenderingContext | WebGLRenderingContext,
         private dataPoints: ArrayLike<DataPoint>,
         public readonly firstDataPointIndex: number,
     ) {
-        this.vao = throwIfFalsy(gl.createVertexArray());
-        this.bind();
-
         this.dataBuffer = throwIfFalsy(gl.createBuffer());
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.dataBuffer);
+        const bindFunc = () => {
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.dataBuffer);
+
+            gl.enableVertexAttribArray(VertexAttribLocations.DATA_POINT);
+            gl.vertexAttribPointer(VertexAttribLocations.DATA_POINT, 2, gl.FLOAT, false, BYTES_PER_POINT, 0);
+
+            gl.enableVertexAttribArray(VertexAttribLocations.DIR);
+            gl.vertexAttribPointer(VertexAttribLocations.DIR, 2, gl.FLOAT, false, BYTES_PER_POINT, 2 * Float32Array.BYTES_PER_ELEMENT);
+        }
+        if (gl instanceof WebGL2RenderingContext) {
+            this.vao = new WebGL2VAO(gl);
+        } else {
+            // const vaoExt = gl.getExtension('OES_vertex_array_object');
+            // if (vaoExt) {
+            //     this.vao = new OESVAO(vaoExt);
+            // } else {
+                this.vao = new WebGL1BufferInfo(bindFunc);
+            // }
+        }
+        bindFunc();
+
         gl.bufferData(gl.ARRAY_BUFFER, BUFFER_CAPACITY * Float32Array.BYTES_PER_ELEMENT, gl.DYNAMIC_DRAW);
-
-        gl.enableVertexAttribArray(VertexAttribLocations.DATA_POINT);
-        gl.vertexAttribPointer(VertexAttribLocations.DATA_POINT, 2, gl.FLOAT, false, BYTES_PER_POINT, 0);
-
-        gl.enableVertexAttribArray(VertexAttribLocations.DIR);
-        gl.vertexAttribPointer(VertexAttribLocations.DIR, 2, gl.FLOAT, false, BYTES_PER_POINT, 2 * Float32Array.BYTES_PER_ELEMENT);
-    }
-
-    bind() {
-        this.gl.bindVertexArray(this.vao);
     }
 
     clear() {
@@ -105,7 +184,7 @@ class VertexArray {
     delete() {
         this.clear();
         this.gl.deleteBuffer(this.dataBuffer);
-        this.gl.deleteVertexArray(this.vao);
+        this.vao.clear();
     }
 
     /**
@@ -183,31 +262,31 @@ class VertexArray {
         const count = last - first;
 
         const gl = this.gl;
-        this.bind();
+        this.vao.bind();
         gl.drawArrays(gl.TRIANGLE_STRIP, first * POINT_PER_DATAPOINT, count * POINT_PER_DATAPOINT);
     }
 }
 
 /**
- * An array of `VertexArray` to represent a series
+ * An array of `SeriesSegmentVertexArray` to represent a series
  *
  * `series.data`  index: 0  [1 ... C] [C+1 ... 2C] ... (C = `BUFFER_DATA_POINT_CAPACITY`)
  * `vertexArrays` index:     0         1           ...
  */
 class SeriesVertexArray {
-    private vertexArrays = [] as VertexArray[];
+    private vertexArrays = [] as SeriesSegmentVertexArray[];
     constructor(
-        private gl: WebGL2RenderingContext,
+        private gl: WebGL2RenderingContext | WebGLRenderingContext,
         private series: TimeChartSeriesOptions,
     ) {
     }
 
     syncBuffer() {
-        let activeArray: VertexArray;
+        let activeArray: SeriesSegmentVertexArray;
         let bufferedDataPointNum = 1;
 
         const newArray = () => {
-            activeArray = new VertexArray(this.gl, this.series.data , bufferedDataPointNum);
+            activeArray = new SeriesSegmentVertexArray(this.gl, this.series.data, bufferedDataPointNum);
             this.vertexArrays.push(activeArray);
         }
 
@@ -265,7 +344,7 @@ export class LineChartRenderer {
 
     constructor(
         private model: RenderModel,
-        private gl: WebGL2RenderingContext,
+        private gl: WebGL2RenderingContext | WebGLRenderingContext,
         private options: ResolvedRenderOptions,
     ) {
         this.program.use();
@@ -315,6 +394,12 @@ export class LineChartRenderer {
                 max: this.model.xScale.invert(this.width + lineWidth / 2),
             };
             arr.draw(renderDomain);
+        }
+        if (this.options.debugWebGL) {
+            const err = gl.getError();
+            if (err != gl.NO_ERROR) {
+                throw new Error(`WebGL error ${err}`);
+            }
         }
     }
 

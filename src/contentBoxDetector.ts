@@ -9,17 +9,16 @@ export class ContentBoxDetector {
     };
     node: HTMLElement;
     constructor(el: HTMLElement, model: RenderModel, options: ResolvedRenderOptions) {
-        el.style.position = 'relative';
         this.node = document.createElement('div');
         this.node.style.position = 'absolute';
         this.node.style.left = `${options.paddingLeft}px`;
         this.node.style.right = `${options.paddingRight}px`;
         this.node.style.top = `${options.paddingTop}px`;
         this.node.style.bottom = `${options.paddingBottom}px`;
-        el.appendChild(this.node);
+        el.shadowRoot!.appendChild(this.node);
 
         model.disposing.on(() => {
-            el.removeChild(this.node);
+            el.shadowRoot!.removeChild(this.node);
         })
     }
 }

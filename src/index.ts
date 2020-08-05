@@ -30,7 +30,6 @@ const defaultOptions = {
 } as const;
 
 const defaultSeriesOptions = {
-    color: rgb(0, 0, 0, 1),
     name: '',
     visible: true,
 } as const;
@@ -45,6 +44,7 @@ export default class TimeChart {
         return {
             data: [] as DataPoint[],
             ...defaultSeriesOptions,
+            color: getComputedStyle(this.el).getPropertyValue('color'),
             ...s,
             _complete: true,
         }
@@ -60,6 +60,15 @@ export default class TimeChart {
         };
 
         this.model = new RenderModel(renderOptions);
+        const shadowRoot = el.attachShadow({ mode: 'open' });
+        const style = document.createElement('style');
+        style.innerText = `
+:host {
+    contain: size layout paint style;
+    position: relative;
+}`
+        shadowRoot.appendChild(style);
+
         const canvasLayer = new CanvasLayer(el, renderOptions, this.model);
         const lineChartRenderer = new LineChartRenderer(this.model, canvasLayer.gl, renderOptions);
 
@@ -80,6 +89,7 @@ export default class TimeChart {
         window.addEventListener('resize', resizeHandler);
         this.model.disposing.on(() => {
             window.removeEventListener('resize', resizeHandler);
+            shadowRoot.removeChild(style);
         })
     }
 

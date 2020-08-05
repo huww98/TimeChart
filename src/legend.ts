@@ -7,7 +7,6 @@ export class Legend {
     itemContainer: Node;
 
     constructor(private el: HTMLElement, private model: RenderModel, private options: ResolvedRenderOptions) {
-        el.style.position = 'relative'
         this.legend = document.createElement('chart-legend');
         const ls = this.legend.style;
         ls.position = 'absolute';
@@ -18,36 +17,36 @@ export class Legend {
 
         const style = document.createElement('style');
         style.textContent = `
-        :host {
-            background: white;
-            border: 1px solid hsl(0, 0%, 80%);
-            border-radius: 3px;
-            padding: 5px 10px;
-        }
-        .item {
-            display: flex;
-            flex-flow: row nowrap;
-            align-items: center;
-            user-select: none;
-        }
-        .item:not(.visible) {
-            color: gray;
-            text-decoration: line-through;
-        }
-        .item .example {
-            width: 50px;
-            margin-right: 10px;
-            max-height: 1em;
-        }`;
+:host {
+    background: var(--background-overlay, white);
+    border: 1px solid hsl(0, 0%, 80%);
+    border-radius: 3px;
+    padding: 5px 10px;
+}
+.item {
+    display: flex;
+    flex-flow: row nowrap;
+    align-items: center;
+    user-select: none;
+}
+.item:not(.visible) {
+    color: gray;
+    text-decoration: line-through;
+}
+.item .example {
+    width: 50px;
+    margin-right: 10px;
+    max-height: 1em;
+}`;
         legendRoot.appendChild(style);
 
         this.itemContainer = legendRoot;
         this.update();
-        el.appendChild(this.legend);
+        el.shadowRoot!.appendChild(this.legend);
         model.updated.on(() => this.update());
 
         model.disposing.on(() => {
-            el.removeChild(this.legend);
+            el.shadowRoot!.removeChild(this.legend);
         })
     }
 

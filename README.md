@@ -125,13 +125,13 @@ const chart = new TimeChart(el, {
 
   default: undefined
 
-* name (string): Reversed for future use (legend, tooltip)
+* name (string): The name of the series. Will be shown in legend and tooltips.
 
   default: ''
 
 * color (CSS color specifier or [d3-color](https://github.com/d3/d3-color) instance): line color
 
-  default: d3.rgb(0, 0, 0, 1)
+  default: `color` CSS property value at initialization.
 
 * visible (boolean): Whether this series is visible
 
@@ -173,6 +173,7 @@ const chart = new TimeChart(el, {
 * `chart.update()`: Request update after some options have been changed. You can call this as many times as needed. The actual update will only happen once per frame.
 
 * `chart.dispose()`: Dispose all the resources used by this chart instance.
+  Note: We use shadow root to protect the chart from unintended style conflict. However, there is no easy way to remove the shadow root after dispose.
 
 ## Interaction
 
@@ -194,6 +195,34 @@ With trackpad:
 * Pinch to zoom X axis
 * Alt + pinch to zoom Y axis
 * Hold Shift key to speed up translate or zoom 5 times
+
+## Styling
+
+The chart is in a shadow root so that most CSS in the main document can not affect it. But we do provide some styling interface.
+
+For example, we can support dark theme easily:
+
+```HTML
+<div id="chart" class="dark-theme"></div>
+```
+```CSS
+.dark-theme {
+    color: white;
+    background: black;
+    --background-overlay: black;
+}
+```
+
+[Live](https://huww98.github.io/TimeChart/demo/dark.html)
+
+The `--background-overlay` CSS property is used in some non-transparent element on top on the chart.
+
+The background of the chart is transparent by default.
+So it's easy to change the background by setting the background of parent element.
+
+All foreground elements will change color to match the `color` CSS property.
+However, chart is drawn in canvas and cannot respond to CSS property changes.
+You need to change the color manually if you want to change the `color` after initialiation.
 
 ## Development
 

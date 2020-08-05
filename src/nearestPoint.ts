@@ -90,14 +90,13 @@ export class NearestPoint {
 
         const style = document.createElementNS('http://www.w3.org/2000/svg', 'style');
         style.textContent = `
-        .timechart-crosshair-intersect {
-            fill: ${options.backgroundColor};
-            visibility: hidden;
-        }
-        .timechart-crosshair-intersect circle {
-            r: 3px;
-        }
-        `;
+.timechart-crosshair-intersect {
+    fill: var(--background-overlay, white);
+    visibility: hidden;
+}
+.timechart-crosshair-intersect circle {
+    r: 3px;
+}`;
         const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
         g.classList.add('timechart-crosshair-intersect');
         g.appendChild(style);

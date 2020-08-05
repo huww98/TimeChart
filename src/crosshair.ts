@@ -16,12 +16,12 @@ export class Crosshair {
 
         const style = document.createElementNS("http://www.w3.org/2000/svg", "style");
         style.textContent = `
-        .timechart-crosshair {
-            stroke: #000000A0;
-            stroke-width: 1;
-            stroke-dasharray: 2 1;
-            visibility: hidden;
-        }`;
+.timechart-crosshair {
+    stroke: currentColor;
+    stroke-width: 1;
+    stroke-dasharray: 2 1;
+    visibility: hidden;
+}`;
         const hLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
         hLine.transform.baseVal.initialize(initTrans);
         hLine.x2.baseVal.newValueSpecifiedUnits(SVGLength.SVG_LENGTHTYPE_PERCENTAGE, 100);

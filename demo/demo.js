@@ -54,4 +54,7 @@ function main() {
     document.getElementById('stop-btn').addEventListener('click', function () {
         clearInterval(ev);
     });
+    document.getElementById('follow-btn').addEventListener('click', function () {
+        chart.options.realTime = true;
+    });
 }

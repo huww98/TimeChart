@@ -320,7 +320,7 @@ class SeriesVertexArray {
 
     draw(renderDomain: { min: number, max: number }) {
         const data = this.series.data;
-        if (data.length === 0 || data[0].x > renderDomain.max || data[data.length - 1].x < renderDomain.min) {
+        if (this.vertexArrays.length === 0 || data[0].x > renderDomain.max || data[data.length - 1].x < renderDomain.min) {
             return;
         }
 

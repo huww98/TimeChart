@@ -175,6 +175,10 @@ const chart = new TimeChart(el, {
 * `chart.dispose()`: Dispose all the resources used by this chart instance.
   Note: We use shadow root to protect the chart from unintended style conflict. However, there is no easy way to remove the shadow root after dispose.
 
+* `chart.onResize()`: Calculate size after layout changes.
+  This method is automatically called when window size changed.
+  However, if there are some layout changes that TimeChart is unaware of, you need to call this method manually.
+
 ## Interaction
 
 With touch screen:

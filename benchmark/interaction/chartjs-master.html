@@ -11,8 +11,9 @@
 <body>
     <canvas id="chart" width="960" height="720"></canvas>
 
-    <script src="https://www.chartjs.org/dist/master/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@1.1.0-alpha.3/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <script src="https://www.chartjs.org/dist/master/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.28.0/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-adapter-moment/0.1.2/chartjs-adapter-moment.min.js"></script>
     <script src="../utils.js"></script>
     <script>
         const xRange = 500 * 1000
@@ -32,7 +33,7 @@
             },
             options: {
                 responsive: false,
-                //devicePixelRatio: 1,
+                devicePixelRatio: 1,
                 spanGaps: true,
                 animation: false,
                 parsing: false,

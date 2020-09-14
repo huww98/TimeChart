@@ -31,7 +31,7 @@
                 }
             }
         }
-        const uplot = new uPlot.Line(opts, data, el);
+        const uplot = new uPlot(opts, data, el);
 
         simulateInteraction(1000 * 1000, 1000, 1000, range => {
             uplot.setScale('x', {

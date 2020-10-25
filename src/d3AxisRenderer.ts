@@ -21,7 +21,7 @@ export class D3AxisRenderer {
 
     update() {
         const xs = this.model.xScale;
-        const xts = scaleTime()
+        const xts = this.options.xScaleType()
             .domain(xs.domain().map(d => d + this.options.baseTime))
             .range(xs.range());
         this.xAxis.scale(xts);

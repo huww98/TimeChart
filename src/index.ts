@@ -12,6 +12,7 @@ import { Legend } from './legend';
 import { Crosshair } from './crosshair';
 import { NearestPoint, NearestPointModel } from './nearestPoint';
 import { CapableElement as ZoomableElement } from './chartZoom/options';
+import { scaleTime } from 'd3-scale';
 
 const defaultOptions = {
     pixelRatio: window.devicePixelRatio,
@@ -25,6 +26,7 @@ const defaultOptions = {
     yRange: 'auto',
     realTime: false,
     baseTime: 0,
+    xScaleType: scaleTime,
     debugWebGL: false,
     forceWebGL1: false,
 } as const;

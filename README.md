@@ -103,6 +103,14 @@ const chart = new TimeChart(el, {
 
   default: 0
 
+* xScaleType (() => Scale): A factory method that returns an object conforming d3-scale interface. Can be used to customize the appearance of x-axis.
+[`scaleTime`](https://github.com/d3/d3-scale#time-scales),
+[`scaleUtc`](https://github.com/d3/d3-scale#scaleUtc),
+[`scaleLinear`](https://github.com/d3/d3-scale#linear-scales)
+from d3-scale are known to work.
+
+  default: d3.scaleTime
+
 * debugWebGL (boolean): If true, detect any error in WebGL calls. Most WebGL calls are asynchronized, and detecting error will force synchronization, which may slows down the program. Mainly used in development of this library.
 
   default: false

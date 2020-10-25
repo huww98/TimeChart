@@ -416,8 +416,8 @@ export class LineChartRenderer {
         const m = this.model;
         const gl = this.gl;
 
-        const zero = [this.xSvgToView(m.xScale(0)), this.ySvgToView(m.yScale(0))];
-        const one = [this.xSvgToView(m.xScale(1)), this.ySvgToView(m.yScale(1))];
+        const zero = [this.xSvgToView(m.xScale(0)!), this.ySvgToView(m.yScale(0)!)];
+        const one = [this.xSvgToView(m.xScale(1)!), this.ySvgToView(m.yScale(1)!)];
 
         // Not using vec2 for precision
         const scaling = [one[0] - zero[0], one[1] - zero[1]]

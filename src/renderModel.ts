@@ -136,8 +136,8 @@ export class RenderModel {
 
     pxPoint(dataPoint: DataPoint) {
         return {
-            x: this.xScale(dataPoint.x),
-            y: this.yScale(dataPoint.y),
+            x: this.xScale(dataPoint.x)!,
+            y: this.yScale(dataPoint.y)!,
         }
     }
 }

@@ -31,14 +31,14 @@ We compare the performance of this library and some other popular libraries. See
 
   ```HTML
   <script src="https://d3js.org/d3-array.v2.min.js"></script>
-  <script src="https://d3js.org/d3-color.v1.min.js"></script>
-  <script src="https://d3js.org/d3-format.v1.min.js"></script>
-  <script src="https://d3js.org/d3-interpolate.v1.min.js"></script>
-  <script src="https://d3js.org/d3-time.v1.min.js"></script>
-  <script src="https://d3js.org/d3-time-format.v2.min.js"></script>
+  <script src="https://d3js.org/d3-color.v2.min.js"></script>
+  <script src="https://d3js.org/d3-format.v2.min.js"></script>
+  <script src="https://d3js.org/d3-interpolate.v2.min.js"></script>
+  <script src="https://d3js.org/d3-time.v2.min.js"></script>
+  <script src="https://d3js.org/d3-time-format.v3.min.js"></script>
   <script src="https://d3js.org/d3-scale.v3.min.js"></script>
-  <script src="https://d3js.org/d3-selection.v1.min.js"></script>
-  <script src="https://d3js.org/d3-axis.v1.min.js"></script>
+  <script src="https://d3js.org/d3-selection.v2.min.js"></script>
+  <script src="https://d3js.org/d3-axis.v2.min.js"></script>
   <script src="https://huww98.github.io/TimeChart/dist/timechart.min.js"></script>
   ```
 

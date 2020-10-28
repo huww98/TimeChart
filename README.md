@@ -68,6 +68,7 @@ To add data dynamically, just push new data points to the data array, then call 
 Some restrictions to the provided data:
 * You can only add new data. Once you call `update`, you can not edit or delete existing data.
 * The x value of each data point must be monotonically increasing.
+* Due to the limitation of single-precision floating-point numbers, if the absolute value of x is large (e.g. `Date.now()`), you may need to use `baseTime` option  (see below) to make the chart render properly.
 
 ### Global Options
 

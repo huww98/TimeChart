@@ -62,7 +62,7 @@ export default class TimeChart {
         };
 
         this.model = new RenderModel(renderOptions);
-        const shadowRoot = el.attachShadow({ mode: 'open' });
+        const shadowRoot = el.shadowRoot ?? el.attachShadow({ mode: 'open' });
         const style = document.createElement('style');
         style.innerText = `
 :host {

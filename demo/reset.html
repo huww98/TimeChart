@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>TimeChart Demo (Reset)</title>
+</head>
+<body>
+    <p>
+        Demostrate how to dispose a chart, and reuse the same HTML element to create another TimeChart.
+    </p>
+    <div id="chart" style="width: 100%; height: 640px;"></div>
+
+    <script src="https://d3js.org/d3-array.v2.min.js"></script>
+    <script src="https://d3js.org/d3-color.v2.min.js"></script>
+    <script src="https://d3js.org/d3-format.v2.min.js"></script>
+    <script src="https://d3js.org/d3-interpolate.v2.min.js"></script>
+    <script src="https://d3js.org/d3-time.v2.min.js"></script>
+    <script src="https://d3js.org/d3-time-format.v3.min.js"></script>
+    <script src="https://d3js.org/d3-scale.v3.min.js"></script>
+    <script src="https://d3js.org/d3-selection.v2.min.js"></script>
+    <script src="https://d3js.org/d3-axis.v2.min.js"></script>
+
+    <script src="../dist/timechart.min.js"></script>
+    <script>
+        const el = document.getElementById('chart');
+        function createChart() {
+            const data = [];
+            for (let x = 0; x < 100; x++) {
+                data.push({x, y: Math.random()});
+            }
+            const chart = new TimeChart(el, {
+                series: [{ data, name: 'Random' }],
+            });
+
+            setTimeout(() => {
+                chart.dispose();
+                createChart()
+            }, 200)
+        }
+        createChart()
+    </script>
+</body>
+</html>

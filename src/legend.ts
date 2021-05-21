@@ -51,6 +51,10 @@ export class Legend {
     }
 
     update() {
+        this.legend.style.display = this.options.legend ? "" : "none";
+        if (!this.options.legend)
+            return;
+
         for (const s of this.options.series) {
             if (!this.items.has(s)) {
                 const item = document.createElement('div');

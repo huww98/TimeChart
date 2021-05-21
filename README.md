@@ -116,6 +116,10 @@ from d3-scale are known to work.
 
   default: false
 
+* legend (boolean): If true, show the legend.
+
+  default: true
+
 ### Series Options
 
 Specify these options in series option object. e.g. to specify `lineWidth`:

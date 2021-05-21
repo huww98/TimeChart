@@ -38,6 +38,7 @@ interface TimeChartRenderOptions {
     paddingRight: number;
     paddingTop: number;
     paddingBottom: number;
+    legend: boolean;
 
     xRange: { min: number | Date, max: number | Date } | 'auto' | null;
     yRange: { min: number, max: number } | 'auto' | null;

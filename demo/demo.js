@@ -57,4 +57,8 @@ function main() {
     document.getElementById('follow-btn').addEventListener('click', function () {
         chart.options.realTime = true;
     });
+    document.getElementById('legend-btn').addEventListener('click', function () {
+        chart.options.legend = !chart.options.legend;
+        chart.update();
+    });
 }

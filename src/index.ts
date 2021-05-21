@@ -29,6 +29,7 @@ const defaultOptions = {
     xScaleType: scaleTime,
     debugWebGL: false,
     forceWebGL1: false,
+    legend: true,
 } as const;
 
 const defaultSeriesOptions = {

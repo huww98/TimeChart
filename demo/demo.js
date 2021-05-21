@@ -32,6 +32,7 @@ function main() {
                 minDomainExtent: 1,
             }
         },
+        tooltip: true,
     });
     const pointCountEl = document.getElementById('point-count');
 
@@ -56,5 +57,8 @@ function main() {
     });
     document.getElementById('follow-btn').addEventListener('click', function () {
         chart.options.realTime = true;
+    });
+    document.getElementById('tooltip-btn').addEventListener('click', function () {
+        chart.options.tooltip = !chart.options.tooltip;
     });
 }

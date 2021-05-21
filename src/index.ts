@@ -13,6 +13,7 @@ import { Crosshair } from './crosshair';
 import { NearestPoint, NearestPointModel } from './nearestPoint';
 import { CapableElement as ZoomableElement } from './chartZoom/options';
 import { scaleTime } from 'd3-scale';
+import { Tooltip } from './tooltip';
 
 const defaultOptions = {
     pixelRatio: window.devicePixelRatio,
@@ -29,6 +30,7 @@ const defaultOptions = {
     xScaleType: scaleTime,
     debugWebGL: false,
     forceWebGL1: false,
+    tooltip: false,
 } as const;
 
 const defaultSeriesOptions = {
@@ -81,6 +83,7 @@ export default class TimeChart {
         const crosshair = new Crosshair(svgLayer, this.model, renderOptions, contentBoxDetector);
         const nearestPointModel = new NearestPointModel(canvasLayer, this.model, renderOptions, contentBoxDetector);
         const nearestPoint = new NearestPoint(svgLayer, renderOptions, nearestPointModel);
+        const tooltip = new Tooltip(el, this.model, renderOptions, nearestPointModel);
 
         this.options = Object.assign(renderOptions, {
             zoom: this.registerZoom(contentBoxDetector.node, options.zoom)

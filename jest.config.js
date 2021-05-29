@@ -1,12 +1,12 @@
-tsConfig = require('./tsconfig.json').compilerOptions;
-tsConfig.types.push('jest')
+tsconfig = require('./tsconfig.json').compilerOptions;
+tsconfig.types.push('jest')
 
 module.exports = {
     preset: 'ts-jest',
     testEnvironment: 'node',
     globals: {
         'ts-jest': {
-            tsConfig
+            tsconfig
         }
     }
 };

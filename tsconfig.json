@@ -9,7 +9,10 @@
         "strict": true,
         "esModuleInterop": true,
         "allowSyntheticDefaultImports": true,
-        "forceConsistentCasingInFileNames": true
+        "forceConsistentCasingInFileNames": true,
+        "declaration": true,
+        "outDir": "dist/lib",
+        "declarationDir": "dist/types"
     },
     "include": [
         "src"

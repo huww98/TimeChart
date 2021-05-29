@@ -14,7 +14,7 @@
     ],
     "scripts": {
         "demo": "http-server -c1 -o /demo/index.html",
-        "build": "tsc --outDir dist/lib --declarationDir dist/types --declaration true && rollup -c",
+        "build": "tsc && rollup -c",
         "start": "rollup -c -w",
         "test": "jest",
         "prepare": "npm run build"
@@ -30,9 +30,9 @@
         "tslib": "^2.2.0"
     },
     "devDependencies": {
-        "@rollup/plugin-commonjs": "^15.1.0",
-        "@rollup/plugin-node-resolve": "^9.0.0",
-        "@rollup/plugin-typescript": "^6.1.0",
+        "@rollup/plugin-commonjs": "^19.0.0",
+        "@rollup/plugin-node-resolve": "^13.0.0",
+        "@rollup/plugin-typescript": "^8.2.1",
         "@types/d3-axis": "^2.1.0",
         "@types/d3-color": "^2.0.1",
         "@types/d3-scale": "^3.3.0",

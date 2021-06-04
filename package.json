@@ -16,7 +16,7 @@
         "demo": "http-server -c1 -o /demo/index.html",
         "build": "tsc && rollup -c",
         "start": "rollup -c -w",
-        "test": "jest",
+        "test": "tsd && jest",
         "prepare": "npm run build"
     },
     "author": "huww98 <huww98@outlook.com>",
@@ -43,6 +43,7 @@
         "rollup": "^2.50.4",
         "rollup-plugin-terser": "^7.0.2",
         "ts-jest": "^27.0.1",
+        "tsd": "^0.17.0",
         "typescript": "^4.3.2"
     }
 }

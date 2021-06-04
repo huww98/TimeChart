@@ -1,6 +1,6 @@
-import { linearRegression, scaleK, applyNewDomain, variance } from './utils';
-import { DIRECTION, ResolvedOptions, CapableElement, dirOptions, Point, ResolvedAxisOptions } from './options';
-import { EventDispatcher } from '../utils';
+import { EventDispatcher } from '@/utils';
+import { CapableElement, DIRECTION, dirOptions, Point, ResolvedAxisOptions, ResolvedOptions } from './options';
+import { applyNewDomain, linearRegression, scaleK, variance } from './utils';
 
 export class ChartZoomTouch {
     public scaleUpdated = new EventDispatcher();

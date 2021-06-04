@@ -1,6 +1,6 @@
-import { CapableElement, ResolvedOptions, Point, DIRECTION, dirOptions } from './options';
-import { scaleK, applyNewDomain } from './utils';
-import { EventDispatcher } from '../utils';
+import { EventDispatcher } from '@/utils';
+import { CapableElement, DIRECTION, dirOptions, Point, ResolvedOptions } from './options';
+import { applyNewDomain, scaleK } from './utils';
 
 export class ChartZoomMouse {
     public scaleUpdated = new EventDispatcher();

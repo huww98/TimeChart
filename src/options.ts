@@ -1,5 +1,7 @@
-import { ColorSpaceObject, ColorCommonInstance, rgb } from 'd3-color';
-import { DataPoint } from './renderModel';
+import { ColorCommonInstance, ColorSpaceObject, rgb } from 'd3-color';
+import * as zoomOptions from './chartZoom/options';
+import { DataPoint } from './core/renderModel';
+import { TimeChartPlugin } from './plugins';
 
 type ColorSpecifier = ColorSpaceObject | ColorCommonInstance | string
 
@@ -11,14 +13,18 @@ interface AxisZoomOptions {
     maxDomainExtent: number;
 }
 
+export interface ResolvedAxisZoomOptions extends zoomOptions.ResolvedAxisOptions {
+    autoRange: boolean;
+}
+
 export interface ZoomOptions {
     x?: Partial<AxisZoomOptions>;
     y?: Partial<AxisZoomOptions>;
 }
 
 export interface ResolvedZoomOptions {
-    x?: AxisZoomOptions;
-    y?: AxisZoomOptions;
+    x?: ResolvedAxisZoomOptions;
+    y?: ResolvedAxisZoomOptions;
 }
 
 interface ScaleBase {
@@ -55,20 +61,25 @@ interface TimeChartRenderOptions {
     forceWebGL1: boolean;
 }
 
-interface TimeChartOptionsBase extends TimeChartRenderOptions {
-}
+export type TimeChartPlugins = Readonly<Record<string, TimeChartPlugin>>;
+export type NoPlugin = Readonly<Record<string, never>>;
+type test = {} extends TimeChartPlugins ? true : false;
+type test2 = {} extends {a: 1} ? true : false;
+type test3 = "a" extends {} ? true : false;
+type test4 = object extends {a: 1} ? true : false;
+type test5 = object extends Readonly<Record<string, never>> ? true : false;
+const a: {} = "a"
+export type TimeChartOptions<TPlugins extends TimeChartPlugins> =
+    TimeChartOptionsBase &
+    (NoPlugin extends TPlugins ? {plugins?: Record<string, never>} : {plugins: TPlugins});
 
-export interface TimeChartOptions extends Partial<TimeChartOptionsBase> {
+export interface TimeChartOptionsBase extends Partial<TimeChartRenderOptions> {
     series?: Partial<TimeChartSeriesOptions>[];
     zoom?: ZoomOptions;
 }
 
 export interface ResolvedRenderOptions extends TimeChartRenderOptions {
     series: TimeChartSeriesOptions[];
-}
-
-export interface ResolvedOptions extends ResolvedRenderOptions {
-    zoom?: ResolvedZoomOptions;
 }
 
 export interface TimeChartSeriesOptions {

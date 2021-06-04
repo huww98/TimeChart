@@ -1,9 +1,10 @@
-import { vec2, vec3, mat4 } from 'gl-matrix';
-
-import { RenderModel, DataPoint } from "./renderModel";
+import { DataPoint, RenderModel } from "@/core/renderModel";
+import { resolveColorRGBA, ResolvedRenderOptions, TimeChartSeriesOptions } from '@/options';
+import { domainSearch } from '@/utils';
+import { vec2 } from 'gl-matrix';
+import { TimeChartPlugin } from '.';
 import { LinkedWebGLProgram, throwIfFalsy } from './webGLUtils';
-import { domainSearch } from './utils';
-import { resolveColorRGBA, TimeChartSeriesOptions, ResolvedRenderOptions } from './options';
+
 
 const enum VertexAttribLocations {
     DATA_POINT = 0,
@@ -424,5 +425,11 @@ export class LineChartRenderer {
 
         gl.uniform2fv(this.program.locations.uModelScale, scaling);
         gl.uniform2fv(this.program.locations.uModelTranslation, zero);
+    }
+}
+
+export const lineChart: TimeChartPlugin<LineChartRenderer> = {
+    apply(chart) {
+        return new LineChartRenderer(chart.model, chart.canvasLayer.gl, chart.options);
     }
 }

@@ -1,6 +1,6 @@
-import { CapableElement, ResolvedOptions, DIRECTION, dirOptions } from "./options";
-import { EventDispatcher } from '../utils'
-import { scaleK, applyNewDomain, clamp } from './utils';
+import { EventDispatcher } from '../utils';
+import { CapableElement, DIRECTION, dirOptions, ResolvedOptions } from "./options";
+import { applyNewDomain, clamp, scaleK } from './utils';
 
 export class ChartZoomWheel {
     public scaleUpdated = new EventDispatcher();

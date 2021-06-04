@@ -1,8 +1,8 @@
+import { EventDispatcher } from '@/utils';
+import { ChartZoomMouse } from './mouse';
 import { CapableElement, ChartZoomOptions, ResolvedOptions } from "./options";
 import { ChartZoomTouch } from './touch';
 import { ChartZoomWheel } from './wheel';
-import { EventDispatcher } from '../utils';
-import { ChartZoomMouse } from './mouse';
 
 const defaultAxisOptions = {
     minDomain: -Infinity,

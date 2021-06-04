@@ -1,16 +1,9 @@
-import { RenderModel } from './renderModel';
-import { ResolvedRenderOptions } from './options';
-import { SVGLayer, makeContentBox } from './svgLayer';
-import { ContentBoxDetector } from "./contentBoxDetector";
+import { makeContentBox } from '@/core/svgLayer';
+import { TimeChartPlugin } from '.';
 
-export class Crosshair {
-    static meta = {
-        name: 'crosshair',
-        required: ['svgLayer', 'model', 'options', 'contentBoxDetector'],
-    }
-
-    constructor(svg: SVGLayer, model: RenderModel, options: ResolvedRenderOptions, detector: ContentBoxDetector) {
-        const contentBox = makeContentBox(model, options);
+export const crosshair: TimeChartPlugin<void> = {
+    apply(chart) {
+        const contentBox = makeContentBox(chart.model, chart.options);
         const initTrans = contentBox.createSVGTransform();
         initTrans.setTranslate(0, 0);
 
@@ -35,6 +28,7 @@ export class Crosshair {
             g.appendChild(e);
         }
 
+        const detector = chart.contentBoxDetector;
         detector.node.addEventListener('mousemove', ev => {
             const contentRect = contentBox.getBoundingClientRect();
             hLine.transform.baseVal.getItem(0).setTranslate(0, ev.clientY - contentRect.y);
@@ -44,6 +38,6 @@ export class Crosshair {
         detector.node.addEventListener('mouseleave', ev => g.style.visibility = 'hidden');
 
         contentBox.appendChild(g);
-        svg.svgNode.appendChild(contentBox);
+        chart.svgLayer.svgNode.appendChild(contentBox);
     }
 }

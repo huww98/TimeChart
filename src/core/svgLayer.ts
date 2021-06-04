@@ -1,4 +1,4 @@
-import { ResolvedRenderOptions } from './options';
+import { ResolvedRenderOptions } from '@/options';
 import { RenderModel } from './renderModel';
 
 export class SVGLayer {

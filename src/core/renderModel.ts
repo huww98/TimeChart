@@ -1,6 +1,6 @@
-import { TimeChartSeriesOptions, ResolvedRenderOptions } from './options';
 import { scaleLinear } from "d3-scale";
-import { EventDispatcher } from './utils';
+import { ResolvedRenderOptions, TimeChartSeriesOptions } from '../options';
+import { EventDispatcher } from '../utils';
 
 interface DataSeriesInfo {
     yRangeUpdatedIndex: number;
@@ -11,7 +11,7 @@ export interface DataPoint {
     y: number;
 }
 
-interface MinMax { min: number; max: number; }
+export interface MinMax { min: number; max: number; }
 
 function maxMin(arr: number[]): MinMax {
     let max = -Infinity;

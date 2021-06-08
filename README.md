@@ -61,6 +61,51 @@ const chart = new TimeChart(el, {
 ```
 [Live](https://huww98.github.io/TimeChart/demo/basic.html)
 
+### Ensemble Your Own Chart
+
+New in v1.
+
+TimeChart comes with a modular design. Almost all functions are implemented as plugins.
+You can pick the plugins you need, so that you don't pay for functions you don't use.
+
+Offical plugins:
+* lineChart: draw the line chart with WebGL, the biggest selling point of this library.
+* d3Axis: intergret with [d3-axis](https://github.com/d3/d3-axis) to draw the axes.
+* legend: show a legend at top-right.
+* crosshair: show crosshair under the mouse.
+* nearestPoint: highlight the data points in each series that is nearest to the mouse.
+* chartZoom: respond to mouse, keyboard, touch event to zoom/pan the chart. See also [the interaction method](#interaction)
+
+As an example, to ensemble your own chart with all offical plugins added:
+```JavaScript
+import TimeChart from 'timechart/core';
+import { lineChart } from 'timechart/plugins/lineChart';
+import { d3Axis } from 'timechart/plugins/d3Axis';
+import { legend } from 'timechart/plugins/legend';
+import { crosshair } from 'timechart/plugins/crosshair';
+import { nearestPoint } from 'timechart/plugins/nearestPoint';
+import { TimeChartZoomPlugin } from 'timechart/plugins/chartZoom';
+
+const el = document.getElementById('chart');
+const chart = new TimeChart(el, {
+    data: {...},
+    plugins: {
+        lineChart,
+        d3Axis,
+        legend,
+        crosshair,
+        nearestPoint,
+        zoom: new TimeChartZoomPlugin({...}),
+    }
+});
+```
+
+This is almost equivalent to just `import TimeChart from 'timechart';`, except:
+* The [zoom options](#zoom-options) are now passed directly to `TimeChartZoomPlugin`.
+* To change the zoom options dynamically, use `chart.plugins.zoom.options` instead of original `chart.options.zoom`.
+
+You can also write your own plugins. Read [the guide](docs/authoring_plugins).
+
 ### Data
 
 To add data dynamically, just push new data points to the data array, then call `chart.update()`.
@@ -166,6 +211,18 @@ const chart = new TimeChart(el, {
             autoRange: true,
         }
     }
+});
+```
+
+New in v1. If you are [using the plugins](#ensemble_your_own_chart), pass these options to the `TimeChartZoomPlugin` plugin.
+```JavaScript
+import TimeChart from 'timechart/core';
+import { TimeChartZoomPlugin } from 'timechart/plugins/chartZoom';
+const chart = new TimeChart(el, {
+    series: [{ data }],
+    plugins: {
+        zoom: new TimeChartZoomPlugin({x: {autoRange: true}})
+    },
 });
 ```
 

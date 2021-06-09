@@ -44,7 +44,12 @@ jobs:
             ${{ runner.os }}-npm-timechart-
             ${{ runner.os }}-npm-
       - run: npm ci
-      - run: npm publish
+      - run: |
+          TAG=$(node <<EOF
+            console.log(require('./package.json').version.match(/^\d+(?:\.\d+)*(?:-(\w+))?\./)[1] ?? 'latest')
+          EOF
+          )
+          npm publish --tag "$TAG"
         env:
           NODE_AUTH_TOKEN: ${{secrets.npm_token}}
 

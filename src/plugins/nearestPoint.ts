@@ -1,6 +1,6 @@
 import { NearestPointModel } from "@/core/nearestPoint";
 import { SVGLayer } from "@/core/svgLayer";
-import { ResolvedRenderOptions, TimeChartSeriesOptions } from "@/options";
+import { ResolvedCoreOptions, TimeChartSeriesOptions } from "@/options";
 import { TimeChartPlugin } from ".";
 
 export class NearestPoint {
@@ -9,7 +9,7 @@ export class NearestPoint {
 
     constructor(
         private svg: SVGLayer,
-        private options: ResolvedRenderOptions,
+        private options: ResolvedCoreOptions,
         private pModel: NearestPointModel
     ) {
         const initTrans = svg.svgNode.createSVGTransform();

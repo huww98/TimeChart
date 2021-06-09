@@ -1,4 +1,4 @@
-import { NoPlugin, ResolvedRenderOptions, TimeChartOptions, TimeChartPlugins, TimeChartSeriesOptions } from '@/options';
+import { NoPlugin, ResolvedCoreOptions, TimeChartOptions, TimeChartPlugins, TimeChartSeriesOptions } from '@/options';
 import { rgb } from 'd3-color';
 import { scaleTime } from 'd3-scale';
 import { TimeChartPlugin } from '../plugins';
@@ -35,15 +35,16 @@ const defaultSeriesOptions = {
 type TPluginStates<TPlugins> = { [P in keyof TPlugins]: TPlugins[P] extends TimeChartPlugin<infer TState> ? TState : never };
 
 export default class TimeChart<TPlugins extends TimeChartPlugins=NoPlugin> {
-    public options: ResolvedRenderOptions;
+    protected readonly _options: ResolvedCoreOptions;
+    get options() { return this._options; }
 
-    public model: RenderModel;
-    public canvasLayer: CanvasLayer;
-    public svgLayer: SVGLayer;
-    public contentBoxDetector: ContentBoxDetector;
-    public nearestPoint: NearestPointModel;
-    public disposed = false;
-    public plugins: TPluginStates<TPlugins>;
+    readonly model: RenderModel;
+    readonly canvasLayer: CanvasLayer;
+    readonly svgLayer: SVGLayer;
+    readonly contentBoxDetector: ContentBoxDetector;
+    readonly nearestPoint: NearestPointModel;
+    readonly plugins: TPluginStates<TPlugins>;
+    disposed = false;
 
     private completeSeriesOptions(s: Partial<TimeChartSeriesOptions>): TimeChartSeriesOptions {
         return {
@@ -58,13 +59,13 @@ export default class TimeChart<TPlugins extends TimeChartPlugins=NoPlugin> {
     constructor(public el: HTMLElement, options?: TimeChartOptions<TPlugins>) {
         const o = options ?? {series: undefined, plugins: undefined};
         const series = o.series?.map(s => this.completeSeriesOptions(s)) ?? [];
-        const renderOptions: ResolvedRenderOptions = {
+        const coreOptions: ResolvedCoreOptions = {
             ...defaultOptions,
             ...options,
             series,
         };
 
-        this.model = new RenderModel(renderOptions);
+        this.model = new RenderModel(coreOptions);
         const shadowRoot = el.shadowRoot ?? el.attachShadow({ mode: 'open' });
         const style = document.createElement('style');
         style.innerText = `
@@ -74,11 +75,11 @@ export default class TimeChart<TPlugins extends TimeChartPlugins=NoPlugin> {
 }`
         shadowRoot.appendChild(style);
 
-        this.canvasLayer = new CanvasLayer(el, renderOptions, this.model);
+        this.canvasLayer = new CanvasLayer(el, coreOptions, this.model);
         this.svgLayer = new SVGLayer(el, this.model);
-        this.contentBoxDetector = new ContentBoxDetector(el, this.model, renderOptions);
-        this.nearestPoint = new NearestPointModel(this.canvasLayer, this.model, renderOptions, this.contentBoxDetector);
-        this.options = renderOptions
+        this.contentBoxDetector = new ContentBoxDetector(el, this.model, coreOptions);
+        this.nearestPoint = new NearestPointModel(this.canvasLayer, this.model, coreOptions, this.contentBoxDetector);
+        this._options = coreOptions
 
         if (o.plugins === undefined) {
             this.plugins = {} as TPluginStates<TPlugins>;

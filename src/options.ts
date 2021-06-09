@@ -63,12 +63,7 @@ interface TimeChartRenderOptions {
 
 export type TimeChartPlugins = Readonly<Record<string, TimeChartPlugin>>;
 export type NoPlugin = Readonly<Record<string, never>>;
-type test = {} extends TimeChartPlugins ? true : false;
-type test2 = {} extends {a: 1} ? true : false;
-type test3 = "a" extends {} ? true : false;
-type test4 = object extends {a: 1} ? true : false;
-type test5 = object extends Readonly<Record<string, never>> ? true : false;
-const a: {} = "a"
+
 export type TimeChartOptions<TPlugins extends TimeChartPlugins> =
     TimeChartOptionsBase &
     (NoPlugin extends TPlugins ? {plugins?: Record<string, never>} : {plugins: TPlugins});
@@ -78,8 +73,12 @@ export interface TimeChartOptionsBase extends Partial<TimeChartRenderOptions> {
     zoom?: ZoomOptions;
 }
 
-export interface ResolvedRenderOptions extends TimeChartRenderOptions {
+export interface ResolvedCoreOptions extends TimeChartRenderOptions {
     series: TimeChartSeriesOptions[];
+}
+
+export interface ResolvedOptions extends ResolvedCoreOptions {
+    zoom: ResolvedZoomOptions;
 }
 
 export interface TimeChartSeriesOptions {

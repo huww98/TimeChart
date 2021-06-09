@@ -1,4 +1,4 @@
-import { ResolvedRenderOptions } from '@/options';
+import { ResolvedCoreOptions } from '@/options';
 import { RenderModel } from './renderModel';
 
 export class SVGLayer {
@@ -18,7 +18,7 @@ export class SVGLayer {
     }
 }
 
-export function makeContentBox(model: RenderModel, options: ResolvedRenderOptions) {
+export function makeContentBox(model: RenderModel, options: ResolvedCoreOptions) {
     const contentSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     contentSvg.classList.add('content-box')
     contentSvg.x.baseVal.value = options.paddingLeft

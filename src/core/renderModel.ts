@@ -1,5 +1,5 @@
 import { scaleLinear } from "d3-scale";
-import { ResolvedRenderOptions, TimeChartSeriesOptions } from '../options';
+import { ResolvedCoreOptions, TimeChartSeriesOptions } from '../options';
 import { EventDispatcher } from '../utils';
 
 interface DataSeriesInfo {
@@ -30,7 +30,7 @@ export class RenderModel {
     yRange: MinMax | null = null;
     private seriesInfo = new Map<TimeChartSeriesOptions, DataSeriesInfo>();
 
-    constructor(private options: ResolvedRenderOptions) {
+    constructor(private options: ResolvedCoreOptions) {
         if (options.xRange !== 'auto' && options.xRange) {
             this.xScale.domain([options.xRange.min, options.xRange.max])
         }

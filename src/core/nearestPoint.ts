@@ -1,4 +1,4 @@
-import { ResolvedRenderOptions, TimeChartSeriesOptions } from '@/options';
+import { ResolvedCoreOptions, TimeChartSeriesOptions } from '@/options';
 import { domainSearch, EventDispatcher } from '@/utils';
 import { CanvasLayer } from './canvasLayer';
 import { ContentBoxDetector } from "./contentBoxDetector";
@@ -13,7 +13,7 @@ export class NearestPointModel {
     constructor(
         private canvas: CanvasLayer,
         private model: RenderModel,
-        private options: ResolvedRenderOptions,
+        private options: ResolvedCoreOptions,
         detector: ContentBoxDetector
     ) {
         detector.node.addEventListener('mousemove', ev => {

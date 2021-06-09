@@ -1,5 +1,5 @@
 import { DataPoint, RenderModel } from "@/core/renderModel";
-import { resolveColorRGBA, ResolvedRenderOptions, TimeChartSeriesOptions } from '@/options';
+import { resolveColorRGBA, ResolvedCoreOptions, TimeChartSeriesOptions } from '@/options';
 import { domainSearch } from '@/utils';
 import { vec2 } from 'gl-matrix';
 import { TimeChartPlugin } from '.';
@@ -347,7 +347,7 @@ export class LineChartRenderer {
     constructor(
         private model: RenderModel,
         private gl: WebGL2RenderingContext | WebGLRenderingContext,
-        private options: ResolvedRenderOptions,
+        private options: ResolvedCoreOptions,
     ) {
         this.program.use();
         model.updated.on(() => this.drawFrame());

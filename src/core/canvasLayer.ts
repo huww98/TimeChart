@@ -1,4 +1,4 @@
-import { resolveColorRGBA, ResolvedRenderOptions } from '@/options';
+import { resolveColorRGBA, ResolvedCoreOptions } from '@/options';
 import { RenderModel } from './renderModel';
 
 function getContext(canvas: HTMLCanvasElement, forceWebGL1: boolean) {
@@ -19,7 +19,7 @@ export class CanvasLayer {
     canvas: HTMLCanvasElement
     gl: WebGL2RenderingContext | WebGLRenderingContext;
 
-    constructor(el: HTMLElement, private options: ResolvedRenderOptions, model: RenderModel) {
+    constructor(el: HTMLElement, private options: ResolvedCoreOptions, model: RenderModel) {
         const canvas = document.createElement('canvas');
         const style = canvas.style;
         style.position = 'absolute';

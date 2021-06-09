@@ -2,11 +2,6 @@ import { ResolvedRenderOptions } from '@/options';
 import { RenderModel } from './renderModel';
 
 export class ContentBoxDetector {
-    static meta = {
-        name: 'contentBoxDetector',
-        required: ['wrapper', 'options'],
-        optional: ['svgLayer', 'canvasLayer'],
-    };
     node: HTMLElement;
     constructor(el: HTMLElement, model: RenderModel, options: ResolvedRenderOptions) {
         this.node = document.createElement('div');

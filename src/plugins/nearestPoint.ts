@@ -4,11 +4,6 @@ import { ResolvedRenderOptions, TimeChartSeriesOptions } from "@/options";
 import { TimeChartPlugin } from ".";
 
 export class NearestPoint {
-    static meta = {
-        name: 'nearestPoint',
-        required: ['svgLayer', 'options', 'nearestPointModel']
-    }
-
     private intersectPoints = new Map<TimeChartSeriesOptions, SVGGeometryElement>();
     private container: SVGGElement;
 

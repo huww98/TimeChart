@@ -5,11 +5,6 @@ import { ContentBoxDetector } from "./contentBoxDetector";
 import { RenderModel } from './renderModel';
 
 export class NearestPointModel {
-    static meta = {
-        name: 'nearestPointModel',
-        required: ['canvasLayer', 'model', 'options', 'contentBoxDetector']
-    }
-
     points = new Map<TimeChartSeriesOptions, {x: number, y: number}>();
     private lastX: null | number = null;
 

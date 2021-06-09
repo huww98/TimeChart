@@ -11,8 +11,8 @@ export class TimeChartZoom {
         this.options = this.registerZoom(chart, options)
     }
 
-    private applyAutoRange(o: ResolvedAxisZoomOptions, dataRange: MinMax | null) {
-        if (!o.autoRange) {
+    private applyAutoRange(o: ResolvedAxisZoomOptions | undefined, dataRange: MinMax | null) {
+        if (!o || !o.autoRange) {
             return;
         }
         let [min, max] = o.scale.domain();
@@ -37,8 +37,8 @@ export class TimeChartZoom {
         });
         const resolvedOptions = z.options as ResolvedZoomOptions
         chart.model.updated.on(() => {
-            this.applyAutoRange(resolvedOptions.x!, chart.model.xRange);
-            this.applyAutoRange(resolvedOptions.y!, chart.model.yRange);
+            this.applyAutoRange(resolvedOptions.x, chart.model.xRange);
+            this.applyAutoRange(resolvedOptions.y, chart.model.yRange);
             z.update();
         });
         z.onScaleUpdated(() => {

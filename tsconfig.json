@@ -11,10 +11,6 @@
         "esModuleInterop": true,
         "allowSyntheticDefaultImports": true,
         "forceConsistentCasingInFileNames": true,
-        "baseUrl": "./src",
-        "paths": {
-            "@/*": ["./*"]
-        },
         "declaration": true,
         "outDir": "dist/lib",
         "declarationDir": "dist/types"

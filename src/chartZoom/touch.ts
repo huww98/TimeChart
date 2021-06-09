@@ -1,4 +1,4 @@
-import { EventDispatcher } from '@/utils';
+import { EventDispatcher } from '../utils';
 import { CapableElement, DIRECTION, dirOptions, Point, ResolvedAxisOptions, ResolvedOptions } from './options';
 import { applyNewDomain, linearRegression, scaleK, variance } from './utils';
 

@@ -1,4 +1,4 @@
-import { NoPlugin, ResolvedCoreOptions, TimeChartOptions, TimeChartPlugins, TimeChartSeriesOptions } from '@/options';
+import { NoPlugin, ResolvedCoreOptions, TimeChartOptions, TimeChartPlugins, TimeChartSeriesOptions } from '../options';
 import { rgb } from 'd3-color';
 import { scaleTime } from 'd3-scale';
 import { TimeChartPlugin } from '../plugins';

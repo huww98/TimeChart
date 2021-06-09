@@ -1,5 +1,5 @@
-import { RenderModel } from "@/core/renderModel";
-import { ResolvedCoreOptions, TimeChartSeriesOptions } from "@/options";
+import { RenderModel } from "../core/renderModel";
+import { ResolvedCoreOptions, TimeChartSeriesOptions } from "../options";
 import { TimeChartPlugin } from ".";
 
 export class Legend {

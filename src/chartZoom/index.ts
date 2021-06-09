@@ -1,4 +1,4 @@
-import { EventDispatcher } from '@/utils';
+import { EventDispatcher } from '../utils';
 import { ChartZoomMouse } from './mouse';
 import { CapableElement, ChartZoomOptions, ResolvedOptions } from "./options";
 import { ChartZoomTouch } from './touch';

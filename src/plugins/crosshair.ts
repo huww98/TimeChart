@@ -1,4 +1,4 @@
-import { makeContentBox } from '@/core/svgLayer';
+import { makeContentBox } from '../core/svgLayer';
 import { TimeChartPlugin } from '.';
 
 export const crosshair: TimeChartPlugin<void> = {

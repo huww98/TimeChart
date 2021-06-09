@@ -1,9 +1,9 @@
 import {expectType, expectError} from 'tsd';
-import core from '@/core';
-import TimeChart from '@/index';
-import { TimeChartPlugin } from '@/plugins';
-import { crosshair } from '@/plugins/crosshair';
-import { Legend, legend } from '@/plugins/legend';
+import core from '../src/core';
+import TimeChart from '../src/index';
+import { TimeChartPlugin } from '../src/plugins';
+import { crosshair } from '../src/plugins/crosshair';
+import { Legend, legend } from '../src/plugins/legend';
 
 const el = {} as HTMLElement;
 const chart = new core(el, {

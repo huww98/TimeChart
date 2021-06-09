@@ -1,6 +1,6 @@
-import { DataPoint, RenderModel } from "@/core/renderModel";
-import { resolveColorRGBA, ResolvedCoreOptions, TimeChartSeriesOptions } from '@/options';
-import { domainSearch } from '@/utils';
+import { DataPoint, RenderModel } from "../core/renderModel";
+import { resolveColorRGBA, ResolvedCoreOptions, TimeChartSeriesOptions } from '../options';
+import { domainSearch } from '../utils';
 import { vec2 } from 'gl-matrix';
 import { TimeChartPlugin } from '.';
 import { LinkedWebGLProgram, throwIfFalsy } from './webGLUtils';

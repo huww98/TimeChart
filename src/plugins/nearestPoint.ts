@@ -1,6 +1,6 @@
-import { NearestPointModel } from "@/core/nearestPoint";
-import { SVGLayer } from "@/core/svgLayer";
-import { ResolvedCoreOptions, TimeChartSeriesOptions } from "@/options";
+import { NearestPointModel } from "../core/nearestPoint";
+import { SVGLayer } from "../core/svgLayer";
+import { ResolvedCoreOptions, TimeChartSeriesOptions } from "../options";
 import { TimeChartPlugin } from ".";
 
 export class NearestPoint {

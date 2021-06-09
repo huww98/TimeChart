@@ -1,4 +1,4 @@
-import { ResolvedCoreOptions } from '@/options';
+import { ResolvedCoreOptions } from '../options';
 import { RenderModel } from './renderModel';
 
 export class ContentBoxDetector {

@@ -1,7 +1,7 @@
-import { ChartZoom } from "@/chartZoom";
-import core from "@/core";
-import { MinMax } from "@/core/renderModel";
-import { ResolvedAxisZoomOptions, ResolvedZoomOptions, TimeChartPlugins, ZoomOptions } from "@/options";
+import { ChartZoom } from "../chartZoom";
+import core from "../core";
+import { MinMax } from "../core/renderModel";
+import { ResolvedAxisZoomOptions, ResolvedZoomOptions, TimeChartPlugins, ZoomOptions } from "../options";
 import { TimeChartPlugin } from ".";
 
 export class TimeChartZoom {

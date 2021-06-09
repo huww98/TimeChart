@@ -1,4 +1,4 @@
-import { resolveColorRGBA, ResolvedCoreOptions } from '@/options';
+import { resolveColorRGBA, ResolvedCoreOptions } from '../options';
 import { RenderModel } from './renderModel';
 
 function getContext(canvas: HTMLCanvasElement, forceWebGL1: boolean) {

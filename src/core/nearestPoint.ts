@@ -1,5 +1,5 @@
-import { ResolvedCoreOptions, TimeChartSeriesOptions } from '@/options';
-import { domainSearch, EventDispatcher } from '@/utils';
+import { ResolvedCoreOptions, TimeChartSeriesOptions } from '../options';
+import { domainSearch, EventDispatcher } from '../utils';
 import { CanvasLayer } from './canvasLayer';
 import { ContentBoxDetector } from "./contentBoxDetector";
 import { RenderModel } from './renderModel';

@@ -1,4 +1,4 @@
-import core from '@/core';
+import core from './core';
 import { NoPlugin, ResolvedOptions, TimeChartOptions, TimeChartPlugins } from './options';
 import { TimeChartZoom, TimeChartZoomPlugin } from './plugins/chartZoom';
 import { crosshair } from './plugins/crosshair';

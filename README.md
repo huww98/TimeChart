@@ -61,7 +61,7 @@ const chart = new TimeChart(el, {
 ```
 [Live](https://huww98.github.io/TimeChart/demo/basic.html)
 
-### Ensemble Your Own Chart
+### Assemble Your Own Chart
 
 New in v1.
 
@@ -76,7 +76,7 @@ Offical plugins:
 * nearestPoint: highlight the data points in each series that is nearest to the mouse.
 * chartZoom: respond to mouse, keyboard, touch event to zoom/pan the chart. See also [the interaction method](#interaction)
 
-As an example, to ensemble your own chart with all offical plugins added:
+As an example, to assemble your own chart with all offical plugins added:
 ```JavaScript
 import TimeChart from 'timechart/core';
 import { lineChart } from 'timechart/plugins/lineChart';
@@ -105,6 +105,24 @@ This is almost equivalent to just `import TimeChart from 'timechart';`, except:
 * To change the zoom options dynamically, use `chart.plugins.zoom.options` instead of original `chart.options.zoom`.
 
 You can also write your own plugins. Read [the guide](docs/authoring_plugins).
+
+For users who use HTML script tag to import TimeChart, use this instead:
+
+```HTML
+<!-- D3 scripts -->
+<script src="https://huww98.github.io/TimeChart/dist/timechart.min.js"></script>
+<script>
+    const el = document.getElementById('chart');
+    const chart = new TimeChart.core(el, {
+        data: {...},
+        plugins: {
+            lineChart: TimeChart.plugins.lineChart,
+            ...
+        }
+    });
+</script>
+```
+[Demo](https://huww98.github.io/TimeChart/demo/plugins/assemble.html)
 
 ### Data
 
@@ -214,7 +232,7 @@ const chart = new TimeChart(el, {
 });
 ```
 
-New in v1. If you are [using the plugins](#ensemble_your_own_chart), pass these options to the `TimeChartZoomPlugin` plugin.
+New in v1. If you are [using the plugins](#assemble_your_own_chart), pass these options to the `TimeChartZoomPlugin` plugin.
 ```JavaScript
 import TimeChart from 'timechart/core';
 import { TimeChartZoomPlugin } from 'timechart/plugins/chartZoom';

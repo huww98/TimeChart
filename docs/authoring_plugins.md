@@ -43,7 +43,7 @@ The following document use TypeScript notation to denote the event signature. Fo
 
 * chart.model.disposing (`Event<() => void>`): Triggered when `chart.dispose()` is invoked. Plugins should remove any event listener added to DOM, remove any element directly attached to `chart.el`;
 
-* chart.model.xScale, chart.model.xScale ([`d3.scaleLinear`](https://github.com/d3/d3-scale#scaleLinear)): used to translate between data points and coordinate used in HTML/SVG.
+* chart.model.xScale, chart.model.yScale ([`d3.scaleLinear`](https://github.com/d3/d3-scale#scaleLinear)): used to translate between data points and coordinate used in HTML/SVG.
 
 * chart.model.pxPoint() (`({x: number, y: number}) => {x: number, y: number}`): a helper to get the coordinate used in HTML/SVG from data point.
 

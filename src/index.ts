@@ -33,6 +33,17 @@ function addDefaultPlugins<TPlugins extends TimeChartPlugins=NoPlugin>(options?:
 }
 
 export default class TimeChart<TPlugins extends TimeChartPlugins=NoPlugin> extends core<TPlugins & TDefaultPlugins> {
+    // For users who use script tag
+    static core = core;
+    static plugins = {
+        lineChart,
+        d3Axis,
+        crosshair,
+        nearestPoint,
+        legend,
+        TimeChartZoomPlugin,
+    }
+
     protected readonly _options: ResolvedOptions;
     get options() { return this._options; }
 

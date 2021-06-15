@@ -4,7 +4,7 @@ import { select } from 'd3-selection';
 
 export interface Event {
     name: string;
-    time: number;
+    x: number;
 }
 
 export class Events implements TimeChartPlugin<void> {
@@ -40,7 +40,7 @@ export class Events implements TimeChartPlugin<void> {
                 .attr('dy', '0.8em');
 
             const allEventEl = eventEl.merge(newEventEl)
-            allEventEl.attr('transform', d => `translate(${chart.model.xScale(d.time)}, 0)`)
+            allEventEl.attr('transform', d => `translate(${chart.model.xScale(d.x)}, 0)`)
             allEventEl.select('text')
                 .text(d => d.name)
         });

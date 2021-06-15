@@ -7,10 +7,13 @@ export interface Event {
     x: number;
 }
 
-export class Events implements TimeChartPlugin<void> {
-    constructor(public data: Event[]) {}
+export class EventsPlugin implements TimeChartPlugin<EventsPlugin> {
+    readonly data: Event[]
+    constructor(data?: Event[]) {
+        this.data = data ?? [];
+    }
 
-    apply(chart: core): void {
+    apply(chart: core) {
         const d3Svg = select(chart.svgLayer.svgNode)
         const box = d3Svg.append('svg');
         box.append('style').text(`
@@ -44,5 +47,7 @@ export class Events implements TimeChartPlugin<void> {
             allEventEl.select('text')
                 .text(d => d.name)
         });
+
+        return this;
     }
 }

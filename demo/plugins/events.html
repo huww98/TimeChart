@@ -33,7 +33,7 @@
             series: [{ data, name: 'Random' }],
             zoom: {x: {autoRange: true}},
             plugins: {
-                events: new TimeChart.plugins_extra.Events([
+                events: new TimeChart.plugins_extra.EventsPlugin([
                     {x: 10*1000, name: 'event A'},
                     {x: 45*1000, name: 'event B'},
                 ]),

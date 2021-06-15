@@ -1,1 +1,1 @@
-export { Events } from './events';
+export { EventsPlugin } from './events';

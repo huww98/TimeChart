@@ -7,11 +7,22 @@
         "type": "git"
     },
     "main": "dist/timechart.umd.js",
+    "browser": "dist/timechart.min.js",
     "module": "dist/lib/index.js",
-    "types": "dist/types/index.d.ts",
+    "types": "dist/lib/index.d.ts",
+    "typesVersions": {
+        "*": {
+            "dist/*": ["dist/*"],
+            "*": ["dist/lib/*", "dist/lib/*/index"]
+        }
+    },
     "files": [
         "dist"
     ],
+    "exports": {
+        ".": "./dist/lib/index.js",
+        "./*": "./dist/lib/*"
+    },
     "scripts": {
         "demo": "http-server -c1 -o /demo/index.html",
         "build": "tsc && rollup -c",

@@ -12,8 +12,7 @@
         "allowSyntheticDefaultImports": true,
         "forceConsistentCasingInFileNames": true,
         "declaration": true,
-        "outDir": "dist/lib",
-        "declarationDir": "dist/types"
+        "outDir": "dist/lib"
     },
     "include": [
         "src"

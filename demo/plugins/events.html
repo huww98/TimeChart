@@ -10,6 +10,13 @@
     <h1>Events Plugin Demo</h1>
     <div id="chart" style="width: 100%; height: 640px;"></div>
 
+    <h2>Add New Event</h2>
+    <form id="new-event-form">
+        <label for="x">x:</label><input type="number" name="x" id="x" step="0.001"/>
+        <label for="name">name:</label><input type="text" name="name" id="name"/>
+        <button type="submit">Add</button>
+    </form>
+
     <script src="https://d3js.org/d3-array.v2.min.js"></script>
     <script src="https://d3js.org/d3-color.v2.min.js"></script>
     <script src="https://d3js.org/d3-format.v2.min.js"></script>
@@ -29,15 +36,26 @@
         for (let x = 0; x < 60 * 1000; x+=1000) {
             data.push({x, y: Math.random()});
         }
+        const events = [
+            {x: 10*1000, name: 'event A'},
+            {x: 45*1000, name: 'event B'},
+        ];
         const chart = new TimeChart(el, {
             series: [{ data, name: 'Random' }],
             zoom: {x: {autoRange: true}},
             plugins: {
-                events: new TimeChart.plugins_extra.EventsPlugin([
-                    {x: 10*1000, name: 'event A'},
-                    {x: 45*1000, name: 'event B'},
-                ]),
+                events: new TimeChart.plugins_extra.EventsPlugin(events),
             }
+        });
+
+        document.getElementById('new-event-form').addEventListener('submit', ev => {
+            ev.preventDefault();
+            events.push({
+                x: document.getElementById('x').value * 1000,
+                name: document.getElementById('name').value,
+            });
+            // `chart.plugins.events.data === events` is true here
+            chart.update();
         });
     </script>
 </body>

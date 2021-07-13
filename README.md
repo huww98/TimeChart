@@ -143,7 +143,7 @@ const chart = new TimeChart(el, {
         name: 'foo',
         data: bar
     }],
-    baseTime: starttime,
+    baseTime: startTime,
 });
 
 // update data

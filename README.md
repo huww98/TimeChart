@@ -133,7 +133,7 @@ Some restrictions to the provided data:
 * The x value of each data point must be monotonically increasing.
 * Due to the limitation of single-precision floating-point numbers, if the absolute value of x is large (e.g. `Date.now()`), you may need to use `baseTime` option  (see below) to make the chart render properly.
 ```JavaScript
-let starttime = (new Date()).getTime(); // Set the start time e.g. 1626186924936
+let startTime = Date.now(); // Set the start time e.g. 1626186924936
 
 let bar = []; // holds the series data
 

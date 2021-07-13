@@ -132,6 +132,28 @@ Some restrictions to the provided data:
 * You can only add new data. Once you call `update`, you can not edit or delete existing data.
 * The x value of each data point must be monotonically increasing.
 * Due to the limitation of single-precision floating-point numbers, if the absolute value of x is large (e.g. `Date.now()`), you may need to use `baseTime` option  (see below) to make the chart render properly.
+```JavaScript
+let startTime = Date.now(); // Set the start time e.g. 1626186924936
+
+let bar = []; // holds the series data
+
+// build the chart
+const chart = new TimeChart(el, {
+    series: [{
+        name: 'foo',
+        data: bar
+    }],
+    baseTime: startTime,
+});
+
+// update data
+bar.push({x: 1, y: 10}); // 1ms after start time
+bar.push({x: 43, y: 6.04}); // 43ms after start time
+bar.push({x: 89, y: 3.95}); // 89ms after start time
+
+// update chart
+chart.update();
+```
 
 ### Global Options
 

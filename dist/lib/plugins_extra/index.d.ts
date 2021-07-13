@@ -1,0 +1,1 @@
+export { EventsPlugin } from './events';

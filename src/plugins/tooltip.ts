@@ -8,6 +8,7 @@ type ItemElements = { item: HTMLElement; example: HTMLElement; name: HTMLElement
 export class Tooltip {
     tooltip: HTMLElement;
 
+    xItem = {} as ItemElements;
     items = new Map<TimeChartSeriesOptions, ItemElements>();
     itemContainer: HTMLElement;
 
@@ -96,6 +97,8 @@ td {
                 let item = this.items.get(s);
                 if (item && point)
                     item.value.textContent = point.y.toLocaleString();
+
+                this.xItem.value.textContent = point?.x?.toLocaleString();
             }
         });
     }
@@ -120,6 +123,12 @@ td {
     }
 
     update() {
+        if(!this.xItem.item && this.options.series.length != 0) {
+            const itemElements = this.createItemElements(this.options.tooltipXLabel);
+            this.itemContainer.appendChild(itemElements.item);
+            this.xItem = itemElements
+        }
+
         for (const s of this.options.series) {
             if (!this.items.has(s)) {
                 const itemElements = this.createItemElements(s.name);

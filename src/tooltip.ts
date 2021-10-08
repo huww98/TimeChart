@@ -4,6 +4,8 @@ import { RenderModel } from './renderModel';
 
 export class Tooltip {
     tooltip: HTMLElement;
+
+    xItem = {} as { item: HTMLElement; example: HTMLElement; name: HTMLElement, value: HTMLElement }
     items = new Map<TimeChartSeriesOptions,
         { item: HTMLElement; example: HTMLElement; name: HTMLElement, value: HTMLElement }>();
     itemContainer: HTMLElement;
@@ -100,11 +102,33 @@ td {
                 let item = this.items.get(s);
                 if (item && point)
                     item.value.textContent = "" + point.y;
+
+                this.xItem.value.textContent = "" + point?.x;
             }
         });
     }
 
     update() {
+        if(!this.xItem.item && this.options.series.length != 0) {
+            const item = document.createElement('tr');
+            item.className = 'item';
+            const exampleTd = document.createElement('td');
+            const example = document.createElement('div');
+            example.className = 'example';
+            exampleTd.appendChild(example)
+            item.appendChild(exampleTd);
+            const name = document.createElement('td');
+            name.className = "name";
+            name.textContent = this.options.tooltipXLabel;
+            item.appendChild(name);
+            const value = document.createElement('td');
+            value.className = "value";
+            item.appendChild(value);
+
+            this.itemContainer.appendChild(item);
+            this.xItem = { item, example, name, value };
+        }
+
         for (const s of this.options.series) {
             if (!this.items.has(s)) {
                 const item = document.createElement('tr');

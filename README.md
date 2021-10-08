@@ -116,6 +116,14 @@ from d3-scale are known to work.
 
   default: false
 
+* tooltip (boolean): If true, hovering tooltip is displayed
+
+  default: false
+
+* tooltipXLabel (string): Label for the X axis in the tooltip
+
+  default: "X"
+
 ### Series Options
 
 Specify these options in series option object. e.g. to specify `lineWidth`:

@@ -77,8 +77,17 @@ td {
         el.addEventListener('mousemove', ((ev: MouseEvent) => {
             const contentRect = el.getBoundingClientRect();
             const tooltipRect = this.tooltip.getBoundingClientRect();
-            ls.right = `${contentRect.width - (ev.clientX - contentRect.x) + mouseOffset}px`
-            ls.top = `${(ev.clientY - contentRect.y - tooltipRect.height - mouseOffset)}px`
+            let right = contentRect.width - (ev.clientX - contentRect.x) + mouseOffset;
+            let top = (ev.clientY - contentRect.y - tooltipRect.height - mouseOffset);
+
+            if (right + tooltipRect.width + mouseOffset > (contentRect.width))
+                right = right - tooltipRect.width - mouseOffset*2;
+
+            if (top < 0)
+                top = top + tooltipRect.height + mouseOffset*2;
+
+            ls.right = right + "px";
+            ls.top = top + "px";
         }).bind(this));
 
         nearestPoint.updated.on(() => {

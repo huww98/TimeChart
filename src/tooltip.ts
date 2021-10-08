@@ -96,7 +96,7 @@ td {
                 if (!s.visible)
                     continue;
 
-                let point = nearestPoint.points.get(s);
+                let point = nearestPoint.dataPoints.get(s);
                 let item = this.items.get(s);
                 if (item && point)
                     item.value.textContent = "" + point.y;

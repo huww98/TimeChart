@@ -83,7 +83,7 @@ td {
             let right = contentRect.width - (ev.clientX - contentRect.x) + mouseOffset;
             let top = (ev.clientY - contentRect.y - tooltipRect.height - mouseOffset);
 
-            if (right + tooltipRect.width + mouseOffset > (contentRect.right))
+            if (right + tooltipRect.width + mouseOffset > (contentRect.width))
                 right = right - tooltipRect.width - mouseOffset*2;
 
             if (top < 0)

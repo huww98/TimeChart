@@ -1,6 +1,7 @@
-import { NearestPointModel } from "./nearestPoint";
-import { ResolvedRenderOptions, TimeChartSeriesOptions } from "./options";
-import { RenderModel } from './renderModel';
+import { NearestPointModel } from "../core/nearestPoint";
+import { ResolvedCoreOptions, TimeChartSeriesOptions } from "../options";
+import { RenderModel } from "../core/renderModel";
+import { TimeChartPlugin } from ".";
 
 export class Tooltip {
     tooltip: HTMLElement;
@@ -15,7 +16,7 @@ export class Tooltip {
         required: ['svgLayer', 'model', 'options', 'contentBoxDetector'],
     }
 
-    constructor(private el: HTMLElement, private model: RenderModel, private options: ResolvedRenderOptions,
+    constructor(private el: HTMLElement, private model: RenderModel, private options: ResolvedCoreOptions,
         private nearestPoint: NearestPointModel) {
         const mouseOffset = 12;
 
@@ -163,5 +164,11 @@ td {
             item.example.style.backgroundColor = s.color.toString();
             item.item.style.display = s.visible ? "" : "none";
         }
+    }
+}
+
+export const tooltip: TimeChartPlugin<Tooltip> = {
+    apply(chart) {
+        return new Tooltip(chart.el, chart.model, chart.options, chart.nearestPoint);
     }
 }

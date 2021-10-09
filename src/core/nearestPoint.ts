@@ -6,6 +6,7 @@ import { RenderModel } from './renderModel';
 
 export class NearestPointModel {
     points = new Map<TimeChartSeriesOptions, {x: number, y: number}>();
+    dataPoints = new Map<TimeChartSeriesOptions, {x: number, y: number}>();
     private lastX: null | number = null;
 
     updated = new EventDispatcher();
@@ -56,8 +57,10 @@ export class NearestPointModel {
                 if (pxPoint.x <= width && pxPoint.x >= 0 &&
                     pxPoint.y <= height && pxPoint.y >= 0) {
                     this.points.set(s, pxPoint);
+                    this.dataPoints.set(s, near[0]);
                 } else {
                     this.points.delete(s);
+                    this.dataPoints.delete(s);
                 }
             }
         }

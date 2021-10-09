@@ -104,16 +104,20 @@ td {
         });
 
         nearestPoint.updated.on(() => {
+            this.xItem.value.textContent = ""
             for (const s of this.options.series) {
                 if (!s.visible)
                     continue;
 
                 let point = nearestPoint.dataPoints.get(s);
                 let item = this.items.get(s);
-                if (item && point)
-                    item.value.textContent = "" + point.y;
+                if(point) {
+                    if (item)
+                        item.value.textContent = "" + point.y;
 
-                this.xItem.value.textContent = "" + point?.x;
+                    if(!isNaN(point.x))
+                        this.xItem.value.textContent = "" + point?.x;
+                }
             }
         });
     }

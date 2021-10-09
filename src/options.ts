@@ -44,6 +44,8 @@ interface TimeChartRenderOptions {
     paddingRight: number;
     paddingTop: number;
     paddingBottom: number;
+    tooltip: boolean;
+    tooltipXLabel: string;
     legend: boolean;
 
     xRange: { min: number | Date, max: number | Date } | 'auto' | null;

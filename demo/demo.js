@@ -32,10 +32,11 @@ function main() {
                 minDomainExtent: 1,
             }
         },
+        tooltip: true,
     });
     const pointCountEl = document.getElementById('point-count');
 
-    let x = performance.now() - 20*1000;
+    let x = performance.now() - 20 * 1000;
     function update() {
         const time = performance.now();
         for (; x < time; x += 1) {
@@ -60,5 +61,8 @@ function main() {
     document.getElementById('legend-btn').addEventListener('click', function () {
         chart.options.legend = !chart.options.legend;
         chart.update();
+    });
+    document.getElementById('tooltip-btn').addEventListener('click', function () {
+        chart.options.tooltip = !chart.options.tooltip;
     });
 }

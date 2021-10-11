@@ -3,18 +3,14 @@ import { ResolvedCoreOptions, TimeChartSeriesOptions } from "../options";
 import { RenderModel } from "../core/renderModel";
 import { TimeChartPlugin } from ".";
 
+type ItemElements = { item: HTMLElement; example: HTMLElement; name: HTMLElement, value: HTMLElement }
+
 export class Tooltip {
     tooltip: HTMLElement;
 
-    xItem = {} as { item: HTMLElement; example: HTMLElement; name: HTMLElement, value: HTMLElement }
-    items = new Map<TimeChartSeriesOptions,
-        { item: HTMLElement; example: HTMLElement; name: HTMLElement, value: HTMLElement }>();
+    xItem = {} as ItemElements;
+    items = new Map<TimeChartSeriesOptions, ItemElements>();
     itemContainer: HTMLElement;
-
-    static meta = {
-        name: 'tooltip',
-        required: ['svgLayer', 'model', 'options', 'contentBoxDetector'],
-    }
 
     constructor(private el: HTMLElement, private model: RenderModel, private options: ResolvedCoreOptions,
         private nearestPoint: NearestPointModel) {
@@ -122,46 +118,37 @@ td {
         });
     }
 
+    private createItemElements(label: string): ItemElements {
+        const item = document.createElement('tr');
+        item.className = 'item';
+        const exampleTd = document.createElement('td');
+        const example = document.createElement('div');
+        example.className = 'example';
+        exampleTd.appendChild(example)
+        item.appendChild(exampleTd);
+        const name = document.createElement('td');
+        name.className = "name";
+        name.textContent = label;
+        item.appendChild(name);
+        const value = document.createElement('td');
+        value.className = "value";
+        item.appendChild(value);
+
+        return { item, example, name, value };
+    }
+
     update() {
         if(!this.xItem.item && this.options.series.length != 0) {
-            const item = document.createElement('tr');
-            item.className = 'item';
-            const exampleTd = document.createElement('td');
-            const example = document.createElement('div');
-            example.className = 'example';
-            exampleTd.appendChild(example)
-            item.appendChild(exampleTd);
-            const name = document.createElement('td');
-            name.className = "name";
-            name.textContent = this.options.tooltipXLabel;
-            item.appendChild(name);
-            const value = document.createElement('td');
-            value.className = "value";
-            item.appendChild(value);
-
-            this.itemContainer.appendChild(item);
-            this.xItem = { item, example, name, value };
+            const itemElements = this.createItemElements(this.options.tooltipXLabel);
+            this.itemContainer.appendChild(itemElements.item);
+            this.xItem = itemElements
         }
 
         for (const s of this.options.series) {
             if (!this.items.has(s)) {
-                const item = document.createElement('tr');
-                item.className = 'item';
-                const exampleTd = document.createElement('td');
-                const example = document.createElement('div');
-                example.className = 'example';
-                exampleTd.appendChild(example)
-                item.appendChild(exampleTd);
-                const name = document.createElement('td');
-                name.className = "name";
-                name.textContent = s.name;
-                item.appendChild(name);
-                const value = document.createElement('td');
-                value.className = "value";
-                item.appendChild(value);
-
-                this.itemContainer.appendChild(item);
-                this.items.set(s, { item, example, name, value });
+                const itemElements = this.createItemElements(s.name);
+                this.itemContainer.appendChild(itemElements.item);
+                this.items.set(s, itemElements);
             }
 
             const item = this.items.get(s)!;

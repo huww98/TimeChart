@@ -33,6 +33,7 @@ export class NearestPointModel {
     adjustPoints() {
         if (this.lastX === null) {
             this.points.clear();
+            this.dataPoints.clear();
         } else {
             const domain = this.model.xScale.invert(this.lastX);
             for (const s of this.options.series) {

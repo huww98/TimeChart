@@ -90,16 +90,14 @@ td {
             ls.top = top + "px";
         }).bind(this));
 
-        el.addEventListener('mouseenter', ev => {
-            if (options.tooltip)
-                ls.visibility = 'visible'
-        });
-
-        el.addEventListener('mouseleave', ev => {
-            ls.visibility = 'hidden'
-        });
-
         nearestPoint.updated.on(() => {
+            if (!options.tooltip || nearestPoint.points.size == 0) {
+                ls.visibility = "hidden";
+                return;
+            }
+
+            ls.visibility = "visible";
+
             this.xItem.value.textContent = ""
             for (const s of this.options.series) {
                 if (!s.visible)

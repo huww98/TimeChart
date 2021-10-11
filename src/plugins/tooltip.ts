@@ -113,10 +113,10 @@ td {
                 let item = this.items.get(s);
                 if(point) {
                     if (item)
-                        item.value.textContent = "" + point.y;
+                        item.value.textContent = point.y.toLocaleString();
 
                     if(!isNaN(point.x))
-                        this.xItem.value.textContent = "" + point?.x;
+                        this.xItem.value.textContent = point.x.toLocaleString();
                 }
             }
         });

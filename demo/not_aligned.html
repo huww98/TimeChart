@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>TimeChart Demo (Not aligned)</title>
+</head>
+<body>
+    <p>X values from different series are not nessesarily aligned.</p>
+    <div id="chart" style="width: 100%; height: 640px;"></div>
+
+    <script src="https://d3js.org/d3-array.v2.min.js"></script>
+    <script src="https://d3js.org/d3-color.v2.min.js"></script>
+    <script src="https://d3js.org/d3-format.v2.min.js"></script>
+    <script src="https://d3js.org/d3-interpolate.v2.min.js"></script>
+    <script src="https://d3js.org/d3-time.v2.min.js"></script>
+    <script src="https://d3js.org/d3-time-format.v3.min.js"></script>
+    <script src="https://d3js.org/d3-scale.v3.min.js"></script>
+    <script src="https://d3js.org/d3-selection.v2.min.js"></script>
+    <script src="https://d3js.org/d3-axis.v2.min.js"></script>
+
+    <script src="../dist/timechart.min.js"></script>
+    <script>
+        const el = document.getElementById('chart');
+        const d1 = [];
+        const d2 = [];
+        for (let x = 0; x < 30; x += 2) {
+            d1.push({x, y: Math.random() + 0.7});
+        }
+        for (let x = 0; x < 30; x += 3) {
+            d2.push({x, y: Math.random()});
+        }
+        const chart = new TimeChart(el, {
+            series: [
+                { data: d1, name: 'd1' },
+                { data: d2, name: 'd2', color: 'red' },
+            ],
+            tooltip: true,
+        });
+    </script>
+</body>
+</html>

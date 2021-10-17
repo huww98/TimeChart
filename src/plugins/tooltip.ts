@@ -57,6 +57,9 @@ td {
     max-width: 100px;
     text-align: right;
 }
+.x-not-aligned .value {
+    opacity: 0.4;
+}
 `;
         legendRoot.appendChild(style);
 
@@ -96,17 +99,31 @@ td {
             ls.left = left + "px";
             ls.top = top + "px";
 
-            this.xItem.value.textContent = ""
+            // display X for the data point that is the closest to the pointer
+            let minPointerDistance = Number.POSITIVE_INFINITY;
+            let displayingX: number | null = null;
+            for (const [s, d] of nearestPoint.dataPoints) {
+                const px = model.pxPoint(d);
+                const dx = px.x - p.x;
+                const dy = px.y - p.y;
+                const dis = Math.sqrt(dx * dx + dy * dy);
+                if (dis < minPointerDistance) {
+                    minPointerDistance = dis;
+                    displayingX = d.x;
+                }
+            }
+            this.xItem.value.textContent = displayingX!.toLocaleString();
+
             for (const s of this.options.series) {
                 if (!s.visible)
                     continue;
 
                 let point = nearestPoint.dataPoints.get(s);
                 let item = this.items.get(s);
-                if (item && point)
+                if (item && point) {
                     item.value.textContent = point.y.toLocaleString();
-
-                this.xItem.value.textContent = point?.x?.toLocaleString();
+                    item.item.classList.toggle('x-not-aligned', point.x !== displayingX);
+                }
             }
         });
     }

@@ -2,10 +2,10 @@ import { ResolvedCoreOptions, TimeChartSeriesOptions } from '../options';
 import { domainSearch, EventDispatcher } from '../utils';
 import { CanvasLayer } from './canvasLayer';
 import { ContentBoxDetector } from "./contentBoxDetector";
-import { RenderModel } from './renderModel';
+import { DataPoint, RenderModel } from './renderModel';
 
 export class NearestPointModel {
-    points = new Map<TimeChartSeriesOptions, {x: number, y: number}>();
+    dataPoints = new Map<TimeChartSeriesOptions, DataPoint>();
     lastPointerPos: null | {x: number, y: number} = null;
 
     updated = new EventDispatcher();
@@ -34,12 +34,12 @@ export class NearestPointModel {
 
     adjustPoints() {
         if (this.lastPointerPos === null) {
-            this.points.clear();
+            this.dataPoints.clear();
         } else {
             const domain = this.model.xScale.invert(this.lastPointerPos.x);
             for (const s of this.options.series) {
                 if (s.data.length == 0 || !s.visible) {
-                    this.points.delete(s);
+                    this.dataPoints.delete(s);
                     continue;
                 }
                 const pos = domainSearch(s.data, 0, s.data.length, domain, d => d.x);
@@ -58,9 +58,9 @@ export class NearestPointModel {
 
                 if (pxPoint.x <= width && pxPoint.x >= 0 &&
                     pxPoint.y <= height && pxPoint.y >= 0) {
-                    this.points.set(s, pxPoint);
+                    this.dataPoints.set(s, near[0]);
                 } else {
-                    this.points.delete(s);
+                    this.dataPoints.delete(s);
                 }
             }
         }

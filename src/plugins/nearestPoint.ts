@@ -2,6 +2,7 @@ import { NearestPointModel } from "../core/nearestPoint";
 import { SVGLayer } from "../core/svgLayer";
 import { ResolvedCoreOptions, TimeChartSeriesOptions } from "../options";
 import { TimeChartPlugin } from ".";
+import { RenderModel } from "../core/renderModel";
 
 export class NearestPoint {
     private intersectPoints = new Map<TimeChartSeriesOptions, SVGGeometryElement>();
@@ -10,6 +11,7 @@ export class NearestPoint {
     constructor(
         private svg: SVGLayer,
         private options: ResolvedCoreOptions,
+        private model: RenderModel,
         private pModel: NearestPointModel
     ) {
         const initTrans = svg.svgNode.createSVGTransform();
@@ -49,12 +51,13 @@ export class NearestPoint {
                 this.intersectPoints.set(s, intersect);
             }
             const intersect = this.intersectPoints.get(s)!;
-            const point = this.pModel.points.get(s);
+            const point = this.pModel.dataPoints.get(s);
             if (!point) {
                 intersect.style.visibility = 'hidden';
             } else {
                 intersect.style.visibility = 'visible';
-                intersect.transform.baseVal.getItem(0).setTranslate(point.x, point.y);
+                const p = this.model.pxPoint(point);
+                intersect.transform.baseVal.getItem(0).setTranslate(p.x, p.y);
             }
         }
     }
@@ -62,6 +65,6 @@ export class NearestPoint {
 
 export const nearestPoint: TimeChartPlugin<NearestPoint> = {
     apply(chart) {
-        return new NearestPoint(chart.svgLayer, chart.options, chart.nearestPoint);
+        return new NearestPoint(chart.svgLayer, chart.options, chart.model, chart.nearestPoint);
     }
 }

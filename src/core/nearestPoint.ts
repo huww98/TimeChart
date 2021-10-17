@@ -6,7 +6,7 @@ import { RenderModel } from './renderModel';
 
 export class NearestPointModel {
     points = new Map<TimeChartSeriesOptions, {x: number, y: number}>();
-    private lastX: null | number = null;
+    lastPointerPos: null | {x: number, y: number} = null;
 
     updated = new EventDispatcher();
 
@@ -18,11 +18,14 @@ export class NearestPointModel {
     ) {
         detector.node.addEventListener('mousemove', ev => {
             const rect = canvas.canvas.getBoundingClientRect();
-            this.lastX = ev.clientX - rect.left;
+            this.lastPointerPos = {
+                x: ev.clientX - rect.left,
+                y: ev.clientY - rect.top,
+            };
             this.adjustPoints();
         });
         detector.node.addEventListener('mouseleave', ev => {
-            this.lastX = null;
+            this.lastPointerPos = null;
             this.adjustPoints();
         });
 
@@ -30,10 +33,10 @@ export class NearestPointModel {
     }
 
     adjustPoints() {
-        if (this.lastX === null) {
+        if (this.lastPointerPos === null) {
             this.points.clear();
         } else {
-            const domain = this.model.xScale.invert(this.lastX);
+            const domain = this.model.xScale.invert(this.lastPointerPos.x);
             for (const s of this.options.series) {
                 if (s.data.length == 0 || !s.visible) {
                     this.points.delete(s);

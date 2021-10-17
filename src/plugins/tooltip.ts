@@ -74,22 +74,6 @@ td {
             el.shadowRoot!.removeChild(this.tooltip);
         })
 
-        el.addEventListener('mousemove', ((ev: MouseEvent) => {
-            const contentRect = el.getBoundingClientRect();
-            const tooltipRect = this.tooltip.getBoundingClientRect();
-            let right = contentRect.width - (ev.clientX - contentRect.x) + mouseOffset;
-            let top = (ev.clientY - contentRect.y - tooltipRect.height - mouseOffset);
-
-            if (right + tooltipRect.width + mouseOffset > (contentRect.width))
-                right = right - tooltipRect.width - mouseOffset*2;
-
-            if (top < 0)
-                top = top + tooltipRect.height + mouseOffset*2;
-
-            ls.right = right + "px";
-            ls.top = top + "px";
-        }).bind(this));
-
         nearestPoint.updated.on(() => {
             if (!options.tooltip || nearestPoint.dataPoints.size == 0) {
                 ls.visibility = "hidden";
@@ -98,6 +82,21 @@ td {
 
             ls.visibility = "visible";
 
+            const p = nearestPoint.lastPointerPos!;
+            const tooltipRect = this.tooltip.getBoundingClientRect();
+            let left = p.x - tooltipRect.width - mouseOffset;
+            let top = p.y - tooltipRect.height - mouseOffset;
+
+            if (left < 0)
+                left = p.x + mouseOffset;
+
+            if (top < 0)
+                top = p.y + mouseOffset;
+
+            ls.left = left + "px";
+            ls.top = top + "px";
+
+            this.xItem.value.textContent = ""
             for (const s of this.options.series) {
                 if (!s.visible)
                     continue;

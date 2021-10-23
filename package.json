@@ -7,7 +7,6 @@
         "type": "git"
     },
     "main": "dist/timechart.umd.js",
-    "browser": "dist/timechart.min.js",
     "module": "dist/lib/index.js",
     "types": "dist/lib/index.d.ts",
     "typesVersions": {

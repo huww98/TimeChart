@@ -8,7 +8,7 @@ type ItemElements = { item: HTMLElement; example: HTMLElement; name: HTMLElement
 export class Tooltip {
     tooltip: HTMLElement;
 
-    xItem = {} as ItemElements;
+    xItem: ItemElements;
     items = new Map<TimeChartSeriesOptions, ItemElements>();
     itemContainer: HTMLElement;
 
@@ -65,6 +65,10 @@ td {
 
 
         const table = document.createElement("table");
+
+        this.xItem = this.createItemElements(this.options.tooltipXLabel);
+        table.appendChild(this.xItem.item);
+
         legendRoot.appendChild(table);
 
         this.itemContainer = table;
@@ -148,12 +152,6 @@ td {
     }
 
     update() {
-        if(!this.xItem.item && this.options.series.length != 0) {
-            const itemElements = this.createItemElements(this.options.tooltipXLabel);
-            this.itemContainer.appendChild(itemElements.item);
-            this.xItem = itemElements
-        }
-
         for (const s of this.options.series) {
             if (!this.items.has(s)) {
                 const itemElements = this.createItemElements(s.name);

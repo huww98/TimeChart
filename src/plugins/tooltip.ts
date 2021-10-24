@@ -160,7 +160,7 @@ td {
             }
 
             const item = this.items.get(s)!;
-            item.example.style.backgroundColor = s.color.toString();
+            item.example.style.backgroundColor = (s.color ?? this.options.color).toString();
             item.item.style.display = s.visible ? "" : "none";
         }
     }

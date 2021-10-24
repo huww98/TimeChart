@@ -40,6 +40,7 @@ interface TimeChartRenderOptions {
     pixelRatio: number;
     lineWidth: number;
     backgroundColor: ColorSpecifier;
+    color: ColorSpecifier;
     paddingLeft: number;
     paddingRight: number;
     paddingTop: number;
@@ -87,7 +88,7 @@ export interface TimeChartSeriesOptions {
     data: DataPoint[];
     lineWidth?: number;
     name: string;
-    color: ColorSpecifier;
+    color?: ColorSpecifier;
     visible: boolean;
 }
 

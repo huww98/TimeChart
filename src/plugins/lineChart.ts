@@ -385,7 +385,7 @@ export class LineChartRenderer {
             if (!ds.visible) {
                 continue;
             }
-            const color = resolveColorRGBA(ds.color);
+            const color = resolveColorRGBA(ds.color ?? this.options.color);
             gl.uniform4fv(this.program.locations.uColor, color);
 
             const lineWidth = ds.lineWidth ?? this.options.lineWidth;

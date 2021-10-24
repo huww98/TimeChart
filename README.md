@@ -173,6 +173,10 @@ const chart = new TimeChart(el, {
 
   default: 'transparent'
 
+* color (CSS color specifier or [d3-color](https://github.com/d3/d3-color) instance): line color
+
+  default: `color` CSS property value at initialization.
+
 * paddingTop / paddingRight / paddingLeft / paddingBottom (number): Padding to add to chart area in CSS pixel. Also reverse space for axes.
 
   default: 10 / 10 / 45 / 20
@@ -235,9 +239,9 @@ const chart = new TimeChart(el, {
 
   default: ''
 
-* color (CSS color specifier or [d3-color](https://github.com/d3/d3-color) instance): line color
+* color (CSS color specifier or [d3-color](https://github.com/d3/d3-color) instance or undefined): line color. If undefined, use global option.
 
-  default: `color` CSS property value at initialization.
+  default: undefined
 
 * visible (boolean): Whether this series is visible
 

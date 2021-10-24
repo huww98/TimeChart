@@ -80,7 +80,7 @@ export class Legend {
             const item = this.items.get(s)!;
             item.item.classList.toggle('visible', s.visible);
             item.example.style.height = `${s.lineWidth ?? this.options.lineWidth}px`;
-            item.example.style.backgroundColor = s.color.toString();
+            item.example.style.backgroundColor = (s.color ?? this.options.color).toString();
         }
     }
 }

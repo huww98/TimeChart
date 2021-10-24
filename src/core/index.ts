@@ -46,6 +46,7 @@ function completeSeriesOptions(s: Partial<TimeChartSeriesOptions>): TimeChartSer
 function completeOptions(el: Element, options?: TimeChartOptionsBase): ResolvedCoreOptions {
     const dynamicDefaults = {
         series: [] as TimeChartSeriesOptions[],
+        color: getComputedStyle(el).getPropertyValue('color'),
     }
     const o = Object.assign({}, dynamicDefaults, options);
     o.series = o.series.map(s => completeSeriesOptions(s));

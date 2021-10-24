@@ -1,4 +1,4 @@
-import { NoPlugin, ResolvedCoreOptions, TimeChartOptions, TimeChartPlugins, TimeChartSeriesOptions } from '../options';
+import { NoPlugin, ResolvedCoreOptions, TimeChartOptions, TimeChartOptionsBase, TimeChartPlugins, TimeChartSeriesOptions } from '../options';
 import { rgb } from 'd3-color';
 import { scaleTime } from 'd3-scale';
 import { TimeChartPlugin } from '../plugins';
@@ -36,6 +36,23 @@ const defaultSeriesOptions = {
 
 type TPluginStates<TPlugins> = { [P in keyof TPlugins]: TPlugins[P] extends TimeChartPlugin<infer TState> ? TState : never };
 
+function completeSeriesOptions(s: Partial<TimeChartSeriesOptions>): TimeChartSeriesOptions {
+    if (!s.data)
+        s.data = [];
+    Object.setPrototypeOf(s, defaultSeriesOptions);
+    return s as TimeChartSeriesOptions;
+}
+
+function completeOptions(el: Element, options?: TimeChartOptionsBase): ResolvedCoreOptions {
+    const dynamicDefaults = {
+        series: [] as TimeChartSeriesOptions[],
+    }
+    const o = Object.assign({}, dynamicDefaults, options);
+    o.series = o.series.map(s => completeSeriesOptions(s));
+    Object.setPrototypeOf(o, defaultOptions);
+    return o as ResolvedCoreOptions;
+}
+
 export default class TimeChart<TPlugins extends TimeChartPlugins=NoPlugin> {
     protected readonly _options: ResolvedCoreOptions;
     get options() { return this._options; }
@@ -48,24 +65,8 @@ export default class TimeChart<TPlugins extends TimeChartPlugins=NoPlugin> {
     readonly plugins: TPluginStates<TPlugins>;
     disposed = false;
 
-    private completeSeriesOptions(s: Partial<TimeChartSeriesOptions>): TimeChartSeriesOptions {
-        return {
-            data: [] as DataPoint[],
-            ...defaultSeriesOptions,
-            color: getComputedStyle(this.el).getPropertyValue('color'),
-            ...s,
-            _complete: true,
-        }
-    }
-
     constructor(public el: HTMLElement, options?: TimeChartOptions<TPlugins>) {
-        const o = options ?? {series: undefined, plugins: undefined};
-        const series = o.series?.map(s => this.completeSeriesOptions(s)) ?? [];
-        const coreOptions: ResolvedCoreOptions = {
-            ...defaultOptions,
-            ...options,
-            series,
-        };
+        const coreOptions = completeOptions(el, options);
 
         this.model = new RenderModel(coreOptions);
         const shadowRoot = el.shadowRoot ?? el.attachShadow({ mode: 'open' });
@@ -83,13 +84,9 @@ export default class TimeChart<TPlugins extends TimeChartPlugins=NoPlugin> {
         this.nearestPoint = new NearestPointModel(this.canvasLayer, this.model, coreOptions, this.contentBoxDetector);
         this._options = coreOptions
 
-        if (o.plugins === undefined) {
-            this.plugins = {} as TPluginStates<TPlugins>;
-        } else {
-            this.plugins = Object.fromEntries(
-                Object.entries(o.plugins).map(([name, p]) => [name, p.apply(this)])
-            ) as TPluginStates<TPlugins>;
-        }
+        this.plugins = Object.fromEntries(
+            Object.entries(options?.plugins ?? {}).map(([name, p]) => [name, p.apply(this)])
+        ) as TPluginStates<TPlugins>;
 
         this.onResize();
 
@@ -113,8 +110,8 @@ export default class TimeChart<TPlugins extends TimeChartPlugins=NoPlugin> {
         // fix dynamic added series
         for (let i = 0; i < this.options.series.length; i++) {
             const s = this.options.series[i];
-            if (!s._complete) {
-                this.options.series[i] = this.completeSeriesOptions(s);
+            if (!defaultSeriesOptions.isPrototypeOf(s)) {
+                this.options.series[i] = completeSeriesOptions(s);
             }
         }
 

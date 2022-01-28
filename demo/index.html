@@ -17,6 +17,16 @@
             height: 640px;
             max-height: 90vh;
         }
+        .padding-control input,span {
+            display: inline-block;
+            width: 4rem;
+            box-sizing: border-box;
+        }
+        .padding-control label {
+            display: inline-block;
+            width: 8em;
+            text-align: right;
+        }
     </style>
 </head>
 <body>
@@ -28,6 +38,23 @@
     <button id="follow-btn">Follow Data</button>
     <button id="legend-btn">Toggle Legend</button>
     <button id="tooltip-btn">Toggle Tooltip</button>
+
+    <div class="padding-control">
+        <div>
+            <label>Padding:</label>
+            <span id="padding-top" title="top"></span>
+            <span id="padding-right" title="right"></span>
+            <span id="padding-bottom" title="bottom"></span>
+            <span id="padding-left" title="left"></span>
+        </div>
+        <div>
+            <label>Render Padding:</label>
+            <input type="number" id="render-padding-top" placeholder="top" title="top">
+            <input type="number" id="render-padding-right" placeholder="right" title="right">
+            <input type="number" id="render-padding-bottom" placeholder="bottom" title="bottom">
+            <input type="number" id="render-padding-left" placeholder="left" title="left">
+        </div>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/d3-array@3"></script>
     <script src="https://cdn.jsdelivr.net/npm/d3-color@3"></script>

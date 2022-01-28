@@ -65,4 +65,21 @@ function main() {
     document.getElementById('tooltip-btn').addEventListener('click', function () {
         chart.options.tooltip = !chart.options.tooltip;
     });
+
+    paddingDirs = ['Top', 'Right', 'Bottom', 'Left'];
+    for (const d of paddingDirs) {
+        const i = document.getElementById('padding-' + d.toLowerCase());
+        const propName = 'padding' + d
+        i.textContent = chart.options[propName];
+    }
+    for (const d of paddingDirs) {
+        /** @type {HTMLInputElement} */
+        const i = document.getElementById('render-padding-' + d.toLowerCase());
+        const propName = 'renderPadding' + d
+        i.value = chart.options[propName];
+        i.addEventListener('change', () => {
+            chart.options[propName] = parseFloat(i.value);
+            chart.update();
+        });
+    }
 }

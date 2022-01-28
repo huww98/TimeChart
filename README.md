@@ -177,7 +177,7 @@ const chart = new TimeChart(el, {
 
   default: `color` CSS property value at initialization.
 
-* paddingTop / paddingRight / paddingLeft / paddingBottom (number): Padding to add to chart area in CSS pixel. Also reverse space for axes.
+* paddingTop / paddingRight / paddingLeft / paddingBottom (number): Padding to add to chart area in CSS pixel. Also reserve space for axes.
 
   default: 10 / 10 / 45 / 20
 

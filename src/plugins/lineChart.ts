@@ -234,20 +234,23 @@ class SeriesSegmentVertexArray {
             calc(dp, previousDP);
             previousDP = dp;
 
-            for (const dp of [vPreviousDP, vDP]) {
-                for (const dir of [dir1, dir2]) {
-                    put(dp);
-                    put(dir);
-                }
-            }
+            put(vPreviousDP);
+            put(dir1);
+            put(vPreviousDP);
+            put(dir2);
+
+            put(vDP);
+            put(dir1);
+            put(vDP);
+            put(dir2);
         }
 
         if (isOverflow) {
             calc(dataPoints[start + numDPtoAdd], previousDP);
-            for (const dir of [dir1, dir2]) {
-                put(vPreviousDP);
-                put(dir);
-            }
+            put(vPreviousDP);
+            put(dir1);
+            put(vPreviousDP);
+            put(dir2);
         }
 
         const gl = this.gl;

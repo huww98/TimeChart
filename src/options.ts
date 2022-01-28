@@ -1,20 +1,15 @@
 import { ColorCommonInstance, ColorSpaceObject, rgb } from 'd3-color';
-import * as zoomOptions from './chartZoom/options';
 import { DataPoint } from './core/renderModel';
 import { TimeChartPlugin } from './plugins';
 
 type ColorSpecifier = ColorSpaceObject | ColorCommonInstance | string
 
-interface AxisZoomOptions {
+export interface AxisZoomOptions {
     autoRange: boolean;
     minDomain: number;
     maxDomain: number;
     minDomainExtent: number;
     maxDomainExtent: number;
-}
-
-export interface ResolvedAxisZoomOptions extends zoomOptions.ResolvedAxisOptions {
-    autoRange: boolean;
 }
 
 export interface ZoomOptions {
@@ -23,8 +18,8 @@ export interface ZoomOptions {
 }
 
 export interface ResolvedZoomOptions {
-    x?: ResolvedAxisZoomOptions;
-    y?: ResolvedAxisZoomOptions;
+    x?: AxisZoomOptions;
+    y?: AxisZoomOptions;
 }
 
 interface ScaleBase {

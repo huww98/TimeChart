@@ -277,6 +277,8 @@ const chart = new TimeChart(el, {
     },
 });
 ```
+Then old `chart.options.chart` is not available. Use `chart.plugins.zoom.options` instead.
+
 
 * autoRange (boolean): Determine maxDomain, minDomain automatically.
 

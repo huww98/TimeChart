@@ -1,18 +1,21 @@
-import { ChartZoom } from "../chartZoom";
+import { ChartZoom, defaultAxisOptions, resolveOptions } from "../chartZoom";
 import core from "../core";
 import { MinMax } from "../core/renderModel";
-import { ResolvedAxisZoomOptions, ResolvedZoomOptions, TimeChartPlugins, ZoomOptions } from "../options";
+import { ResolvedZoomOptions, TimeChartPlugins, ZoomOptions } from "../options";
 import { TimeChartPlugin } from ".";
+import { ScaleLinear } from "d3-scale";
 
 export class TimeChartZoom {
-    public options: ResolvedZoomOptions;
-
-    constructor(chart: core<TimeChartPlugins>, options: ZoomOptions) {
-        this.options = this.registerZoom(chart, options)
+    constructor(chart: core<TimeChartPlugins>, public options: ResolvedZoomOptions) {
+        this.registerZoom(chart)
     }
 
-    private applyAutoRange(o: ResolvedAxisZoomOptions | undefined, dataRange: MinMax | null) {
-        if (!o || !o.autoRange) {
+    private applyAutoRange(o: {scale: ScaleLinear<number, number>, autoRange: boolean, minDomain?: number, maxDomain?: number} | undefined, dataRange: MinMax | null) {
+        if (!o)
+            return;
+        if (!o.autoRange) {
+            delete o.minDomain;
+            delete o.maxDomain;
             return;
         }
         let [min, max] = o.scale.domain();
@@ -24,21 +27,15 @@ export class TimeChartZoom {
         o.maxDomain = max;
     }
 
-    private registerZoom(chart: core<TimeChartPlugins>, zoomOptions: ZoomOptions) {
+    private registerZoom(chart: core<TimeChartPlugins>) {
         const z = new ChartZoom(chart.contentBoxDetector.node, {
-            x: zoomOptions.x && {
-                ...zoomOptions.x,
-                scale: chart.model.xScale,
-            },
-            y: zoomOptions.y && {
-                ...zoomOptions.y,
-                scale: chart.model.yScale,
-            }
+            x: this.options.x && Object.assign(Object.create(this.options.x), { scale: chart.model.xScale }),
+            y: this.options.y && Object.assign(Object.create(this.options.y), { scale: chart.model.yScale }),
         });
-        const resolvedOptions = z.options as ResolvedZoomOptions
+        const o = z.options as ResolvedZoomOptions & typeof z.options
         chart.model.updated.on(() => {
-            this.applyAutoRange(resolvedOptions.x, chart.model.xRange);
-            this.applyAutoRange(resolvedOptions.y, chart.model.yRange);
+            this.applyAutoRange(o.x, chart.model.xRange);
+            this.applyAutoRange(o.y, chart.model.yRange);
             z.update();
         });
         z.onScaleUpdated(() => {
@@ -47,15 +44,20 @@ export class TimeChartZoom {
             chart.options.realTime = false;
             chart.update();
         });
-        return resolvedOptions;
     }
 }
 
+const defaults = Object.assign(Object.create(defaultAxisOptions) as typeof defaultAxisOptions, {
+    autoRange: true,
+} as const);
+
 export class TimeChartZoomPlugin implements TimeChartPlugin<TimeChartZoom> {
-    constructor(private o: ZoomOptions) {
+    options: ResolvedZoomOptions;
+    constructor(o?: ZoomOptions) {
+        this.options = resolveOptions(defaults, o);
     }
 
     apply(chart: core<TimeChartPlugins>) {
-        return new TimeChartZoom(chart, this.o);
+        return new TimeChartZoom(chart, this.options);
     }
 }

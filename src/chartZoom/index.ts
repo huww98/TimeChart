@@ -4,12 +4,26 @@ import { CapableElement, ChartZoomOptions, ResolvedOptions } from "./options";
 import { ChartZoomTouch } from './touch';
 import { ChartZoomWheel } from './wheel';
 
-const defaultAxisOptions = {
+export const defaultAxisOptions = {
     minDomain: -Infinity,
     maxDomain: Infinity,
     minDomainExtent: 0,
     maxDomainExtent: Infinity,
 } as const;
+
+type WithDefaults<T, TDefault> = {x?: T&TDefault, y?: T&TDefault}
+
+export function resolveOptions<T, TDefault extends Object>(defaults: TDefault, o?: {x?: T, y?: T}): WithDefaults<T, TDefault> {
+    if (!o)
+        o = {}
+    const resolveAxis = (ao?: T) => {
+        if (ao && !defaults.isPrototypeOf(ao))
+            Object.setPrototypeOf(ao, defaults);
+    }
+    resolveAxis(o.x);
+    resolveAxis(o.y);
+    return o as WithDefaults<T, TDefault>;
+}
 
 export class ChartZoom {
     options: ResolvedOptions;
@@ -20,10 +34,7 @@ export class ChartZoom {
 
     constructor(el: CapableElement, options?: ChartZoomOptions) {
         options = options ?? {};
-        this.options = {
-            x: options.x && { ...defaultAxisOptions, ...options.x },
-            y: options.y && { ...defaultAxisOptions, ...options.y },
-        };
+        this.options = resolveOptions(defaultAxisOptions, options);
 
         this.touch = new ChartZoomTouch(el, this.options);
         this.mouse = new ChartZoomMouse(el, this.options);

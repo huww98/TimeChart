@@ -346,6 +346,8 @@ export class LineChartRenderer {
     private arrays = new Map<TimeChartSeriesOptions, SeriesVertexArray>();
     private height = 0;
     private width = 0;
+    private renderHeight = 0;
+    private renderWidth = 0;
 
     constructor(
         private model: RenderModel,
@@ -368,16 +370,18 @@ export class LineChartRenderer {
         }
     }
 
+    syncViewport() {
+        this.renderWidth = this.width - this.options.renderPaddingLeft - this.options.renderPaddingRight;
+        this.renderHeight = this.height - this.options.renderPaddingTop - this.options.renderPaddingBottom;
+
+        const scale = vec2.fromValues(this.renderWidth, this.renderHeight)
+        vec2.divide(scale, [2., 2.], scale)
+        this.gl.uniform2fv(this.program.locations.uProjectionScale, scale);
+    }
+
     onResize(width: number, height: number) {
         this.height = height;
         this.width = width;
-
-        const scale = vec2.fromValues(width, height)
-        vec2.divide(scale, scale, [2, 2])
-        vec2.inverse(scale, scale)
-
-        const gl = this.gl;
-        gl.uniform2fv(this.program.locations.uProjectionScale, scale);
     }
 
     drawFrame() {
@@ -395,8 +399,8 @@ export class LineChartRenderer {
             gl.uniform1f(this.program.locations.uLineWidth, lineWidth / 2);
 
             const renderDomain = {
-                min: this.model.xScale.invert(-lineWidth / 2),
-                max: this.model.xScale.invert(this.width + lineWidth / 2),
+                min: this.model.xScale.invert(this.options.renderPaddingLeft - lineWidth / 2),
+                max: this.model.xScale.invert(this.width - this.options.renderPaddingRight + lineWidth / 2),
             };
             arr.draw(renderDomain);
         }
@@ -409,19 +413,20 @@ export class LineChartRenderer {
     }
 
     private ySvgToView(v: number) {
-        return -v + this.height / 2;
+        return -v + this.renderHeight / 2 + this.options.renderPaddingTop;
     }
 
     private xSvgToView(v: number) {
-        return v - this.width / 2;
+        return v - this.renderWidth / 2 - this.options.renderPaddingLeft;
     }
 
     syncDomain() {
+        this.syncViewport();
         const m = this.model;
         const gl = this.gl;
 
-        const zero = [this.xSvgToView(m.xScale(0)!), this.ySvgToView(m.yScale(0)!)];
-        const one = [this.xSvgToView(m.xScale(1)!), this.ySvgToView(m.yScale(1)!)];
+        const zero = [this.xSvgToView(m.xScale(0)), this.ySvgToView(m.yScale(0))];
+        const one = [this.xSvgToView(m.xScale(1)), this.ySvgToView(m.yScale(1))];
 
         // Not using vec2 for precision
         const scaling = [one[0] - zero[0], one[1] - zero[1]]

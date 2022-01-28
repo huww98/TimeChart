@@ -36,10 +36,17 @@ interface TimeChartRenderOptions {
     lineWidth: number;
     backgroundColor: ColorSpecifier;
     color: ColorSpecifier;
+
     paddingLeft: number;
     paddingRight: number;
     paddingTop: number;
     paddingBottom: number;
+
+    renderPaddingLeft: number;
+    renderPaddingRight: number;
+    renderPaddingTop: number;
+    renderPaddingBottom: number;
+
     legend: boolean;
     tooltip: boolean;
     tooltipXLabel: string;

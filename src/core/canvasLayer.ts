@@ -34,7 +34,10 @@ export class CanvasLayer {
 
         this.canvas = canvas;
 
-        model.updated.on(() => this.clear());
+        model.updated.on(() => {
+            this.clear();
+            this.syncViewport();
+        });
         model.resized.on((w, h) => this.onResize(w, h));
         model.disposing.on(() => {
             el.shadowRoot!.removeChild(canvas);
@@ -47,12 +50,23 @@ export class CanvasLayer {
         })
     }
 
+    syncViewport() {
+        const o = this.options;
+        const r = o.pixelRatio;
+        this.gl.viewport(
+            o.renderPaddingLeft * r,
+            o.renderPaddingBottom * r,
+            (this.canvas.width - (o.renderPaddingLeft + o.renderPaddingRight) * r),
+            (this.canvas.height - (o.renderPaddingTop + o.renderPaddingBottom) * r),
+        );
+    }
+
     onResize(width: number, height: number) {
         const canvas = this.canvas;
         const scale = this.options.pixelRatio;
         canvas.width = width * scale;
         canvas.height = height * scale;
-        this.gl.viewport(0, 0, canvas.width, canvas.height);
+        this.syncViewport();
     }
 
     clear() {

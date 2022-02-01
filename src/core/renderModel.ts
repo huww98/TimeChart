@@ -2,10 +2,6 @@ import { scaleLinear } from "d3-scale";
 import { ResolvedCoreOptions, TimeChartSeriesOptions } from '../options';
 import { EventDispatcher } from '../utils';
 
-interface DataSeriesInfo {
-    yRangeUpdatedIndex: number;
-}
-
 export interface DataPoint {
     x: number;
     y: number;
@@ -13,14 +9,22 @@ export interface DataPoint {
 
 export interface MinMax { min: number; max: number; }
 
-function maxMin(arr: number[]): MinMax {
+function calcMinMaxY(arr: DataPoint[], start: number, end: number): MinMax {
     let max = -Infinity;
     let min = Infinity;
-    for (const v of arr) {
+    for (let i = start; i < end; i++) {
+        const v = arr[i].y;
         if (v > max) max = v;
         if (v < min) min = v;
     }
     return { max, min };
+}
+
+function unionMinMax(...items: MinMax[]) {
+    return {
+        min: Math.min(...items.map(i => i.min)),
+        max: Math.max(...items.map(i => i.max)),
+    };
 }
 
 export class RenderModel {
@@ -28,7 +32,6 @@ export class RenderModel {
     yScale = scaleLinear();
     xRange: MinMax | null = null;
     yRange: MinMax | null = null;
-    private seriesInfo = new Map<TimeChartSeriesOptions, DataSeriesInfo>();
 
     constructor(private options: ResolvedCoreOptions) {
         if (options.xRange !== 'auto' && options.xRange) {
@@ -63,30 +66,24 @@ export class RenderModel {
     update() {
         this.updateModel();
         this.updated.dispatch();
+        for (const s of this.options.series) {
+            s.data._synced();
+        }
     }
 
     updateModel() {
-        for (const s of this.options.series) {
-            if (!this.seriesInfo.has(s)) {
-                this.seriesInfo.set(s, {
-                    yRangeUpdatedIndex: 0,
-                });
-            }
-        }
-
         const series = this.options.series.filter(s => s.data.length > 0);
         if (series.length === 0) {
             return;
         }
 
-        const opXRange = this.options.xRange;
-        const opYRange = this.options.yRange;
+        const o = this.options;
 
         {
             const maxDomain = Math.max(...series.map(s => s.data[s.data.length - 1].x));
-            const minDomain = this.xRange?.min ?? Math.min(...series.map(s => s.data[0].x));
+            const minDomain = Math.min(...series.map(s => s.data[0].x));
             this.xRange = { max: maxDomain, min: minDomain };
-            if (this.options.realTime || opXRange === 'auto') {
+            if (this.options.realTime || o.xRange === 'auto') {
                 if (this.options.realTime) {
                     const currentDomain = this.xScale.domain();
                     const range = currentDomain[1] - currentDomain[0];
@@ -94,28 +91,25 @@ export class RenderModel {
                 } else { // Auto
                     this.xScale.domain([minDomain, maxDomain]);
                 }
-            } else if (opXRange) {
-                this.xScale.domain([opXRange.min, opXRange.max])
+            } else if (o.xRange) {
+                this.xScale.domain([o.xRange.min, o.xRange.max])
             }
         }
         {
-            const maxMinY = series.map(s => {
-                const newY = s.data.slice(this.seriesInfo.get(s)!.yRangeUpdatedIndex).map(d => d.y)
-                return maxMin(newY);
+            const minMaxY = series.flatMap(s => {
+                return [
+                    calcMinMaxY(s.data, 0, s.data.pushed_front),
+                    calcMinMaxY(s.data, s.data.length - s.data.pushed_back, s.data.length),
+                ];
             })
             if (this.yRange) {
-                maxMinY.push(this.yRange);
+                minMaxY.push(this.yRange);
             }
-            const minDomain = Math.min(...maxMinY.map(s => s.min));
-            const maxDomain = Math.max(...maxMinY.map(s => s.max));
-            this.yRange = { max: maxDomain, min: minDomain };
-            if (opYRange === 'auto') {
-                this.yScale.domain([minDomain, maxDomain]).nice();
-                for (const s of series) {
-                    this.seriesInfo.get(s)!.yRangeUpdatedIndex = s.data.length;
-                }
-            } else if (opYRange) {
-                this.yScale.domain([opYRange.min, opYRange.max])
+            this.yRange = unionMinMax(...minMaxY);
+            if (o.yRange === 'auto') {
+                this.yScale.domain([this.yRange.min, this.yRange.max]).nice();
+            } else if (o.yRange) {
+                this.yScale.domain([o.yRange.min, o.yRange.max])
             }
         }
     }

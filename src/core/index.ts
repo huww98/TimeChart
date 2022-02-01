@@ -7,6 +7,7 @@ import { ContentBoxDetector } from "./contentBoxDetector";
 import { NearestPointModel } from './nearestPoint';
 import { DataPoint, RenderModel } from './renderModel';
 import { SVGLayer } from './svgLayer';
+import { DataPointsBuffer } from './dataPointsBuffer';
 
 
 const defaultOptions = {
@@ -35,14 +36,14 @@ const defaultOptions = {
 
 const defaultSeriesOptions = {
     name: '',
+    color: null,
     visible: true,
 } as const;
 
 type TPluginStates<TPlugins> = { [P in keyof TPlugins]: TPlugins[P] extends TimeChartPlugin<infer TState> ? TState : never };
 
 function completeSeriesOptions(s: Partial<TimeChartSeriesOptions>): TimeChartSeriesOptions {
-    if (!s.data)
-        s.data = [];
+    s.data = s.data ? DataPointsBuffer._from_array(s.data) : new DataPointsBuffer();
     Object.setPrototypeOf(s, defaultSeriesOptions);
     return s as TimeChartSeriesOptions;
 }

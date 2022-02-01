@@ -1,4 +1,5 @@
 import { ColorCommonInstance, ColorSpaceObject, rgb } from 'd3-color';
+import { DataPointsBuffer } from './core/dataPointsBuffer';
 import { DataPoint } from './core/renderModel';
 import { TimeChartPlugin } from './plugins';
 
@@ -87,7 +88,7 @@ export interface ResolvedOptions extends ResolvedCoreOptions {
 }
 
 export interface TimeChartSeriesOptions {
-    data: DataPoint[];
+    data: DataPointsBuffer;
     lineWidth?: number;
     name: string;
     color?: ColorSpecifier;

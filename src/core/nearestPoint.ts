@@ -43,7 +43,7 @@ export class NearestPointModel {
                     continue;
                 }
                 const pos = domainSearch(s.data, 0, s.data.length, domain, d => d.x);
-                const near: typeof s.data = [];
+                const near: DataPoint[] = [];
                 if (pos > 0) {
                     near.push(s.data[pos - 1]);
                 }

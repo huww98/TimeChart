@@ -4,6 +4,7 @@ import { domainSearch } from '../utils';
 import { vec2 } from 'gl-matrix';
 import { TimeChartPlugin } from '.';
 import { LinkedWebGLProgram, throwIfFalsy } from './webGLUtils';
+import { DataPointsBuffer } from "../core/dataPointsBuffer";
 
 
 const enum VertexAttribLocations {
@@ -96,7 +97,8 @@ const POINT_PER_DATAPOINT = 4;
 const INDEX_PER_DATAPOINT = INDEX_PER_POINT * POINT_PER_DATAPOINT;
 const BYTES_PER_POINT = INDEX_PER_POINT * Float32Array.BYTES_PER_ELEMENT;
 const BUFFER_DATA_POINT_CAPACITY = 128 * 1024;
-const BUFFER_CAPACITY = BUFFER_DATA_POINT_CAPACITY * INDEX_PER_DATAPOINT + 2 * POINT_PER_DATAPOINT;
+const BUFFER_POINT_CAPACITY = BUFFER_DATA_POINT_CAPACITY * POINT_PER_DATAPOINT + 2;
+const BUFFER_CAPACITY = BUFFER_POINT_CAPACITY * INDEX_PER_POINT;
 
 interface IVAO {
     bind(): void;
@@ -144,15 +146,12 @@ class WebGL1BufferInfo implements IVAO {
 class SeriesSegmentVertexArray {
     vao: IVAO;
     dataBuffer: WebGLBuffer;
-    length = 0;
+    validStart = 0;
+    validEnd = 0;
 
-    /**
-     * @param firstDataPointIndex At least 1, since datapoint 0 has no path to draw.
-     */
     constructor(
         private gl: WebGL2RenderingContext | WebGLRenderingContext,
-        private dataPoints: ArrayLike<DataPoint>,
-        public readonly firstDataPointIndex: number,
+        private dataPoints: DataPointsBuffer,
     ) {
         this.dataBuffer = throwIfFalsy(gl.createBuffer());
         const bindFunc = () => {
@@ -180,7 +179,7 @@ class SeriesSegmentVertexArray {
     }
 
     clear() {
-        this.length = 0;
+        this.validStart = this.validEnd = 0;
     }
 
     delete() {
@@ -189,23 +188,26 @@ class SeriesSegmentVertexArray {
         this.vao.clear();
     }
 
-    /**
-     * @returns Next data point index, or `dataPoints.length` if all data added.
+    /** pop 0 means just remove the overflow
+     *
+     * @returns Number of datapoints remaining to be removed. Or less than 0 if all removing finished
      */
-    addDataPoints(): number {
+    popBack(n: number): number {
+        const newVaildEndDP = Math.floor(this.validEnd / POINT_PER_DATAPOINT) - n;
+        this.validEnd = Math.max(newVaildEndDP * POINT_PER_DATAPOINT, this.validStart);
+        return Math.floor(this.validStart / POINT_PER_DATAPOINT) - newVaildEndDP;
+    }
+
+    popFront(n: number): number {
+        const newVaildStartDP = Math.floor(this.validStart / POINT_PER_DATAPOINT) + n;
+        this.validStart = Math.min(newVaildStartDP * POINT_PER_DATAPOINT, this.validEnd);
+        return newVaildStartDP - Math.floor(this.validEnd / POINT_PER_DATAPOINT);
+    }
+
+    private syncPoints(start: number, bufferStart: number, bufferEnd: number) {
         const dataPoints = this.dataPoints;
-        const start = this.firstDataPointIndex + this.length;
-
-        const remainDPCapacity = BUFFER_DATA_POINT_CAPACITY - this.length;
-        const remainDPCount = dataPoints.length - start
-        const isOverflow = remainDPCapacity < remainDPCount;
-        const numDPtoAdd = isOverflow ? remainDPCapacity : remainDPCount;
-        let extraBufferLength = INDEX_PER_DATAPOINT * numDPtoAdd;
-        if (isOverflow) {
-            extraBufferLength += 2 * INDEX_PER_POINT;
-        }
-
-        const buffer = new Float32Array(extraBufferLength);
+        const n = bufferEnd - bufferStart;
+        const buffer = new Float32Array(n * INDEX_PER_POINT);
         let bi = 0;
         const vDP = vec2.create()
         const vPreviousDP = vec2.create()
@@ -228,6 +230,7 @@ class SeriesSegmentVertexArray {
             bi += 2;
         }
 
+        const numDPtoAdd = Math.floor(n / POINT_PER_DATAPOINT)
         let previousDP = dataPoints[start - 1];
         for (let i = 0; i < numDPtoAdd; i++) {
             const dp = dataPoints[start + i];
@@ -245,38 +248,64 @@ class SeriesSegmentVertexArray {
             put(dir2);
         }
 
-        if (isOverflow) {
+        if (bi < buffer.length) {  // Overflow
             calc(dataPoints[start + numDPtoAdd], previousDP);
             put(vPreviousDP);
             put(dir1);
             put(vPreviousDP);
             put(dir2);
         }
+        if (bi !== buffer.length)
+            throw Error('BUG!')
 
         const gl = this.gl;
         gl.bindBuffer(gl.ARRAY_BUFFER, this.dataBuffer);
-        gl.bufferSubData(gl.ARRAY_BUFFER, BYTES_PER_POINT * POINT_PER_DATAPOINT * this.length, buffer);
+        gl.bufferSubData(gl.ARRAY_BUFFER, BYTES_PER_POINT * bufferStart, buffer);
+    }
 
-        this.length += numDPtoAdd;
-        return start + numDPtoAdd;
+    /**
+     * @returns Number of datapoints remaining to be added.
+     */
+    pushBack(n: number): number {
+        if (this.validStart === this.validEnd)
+            this.validStart = this.validEnd = 0;
+
+        const oldValidEnd = this.validEnd;
+        this.validEnd = Math.min(BUFFER_POINT_CAPACITY, this.validEnd + n * POINT_PER_DATAPOINT);
+        const numDPtoAdd = Math.floor((this.validEnd - oldValidEnd) / POINT_PER_DATAPOINT);
+        this.syncPoints(this.dataPoints.length - n, oldValidEnd, this.validEnd);
+
+        return n - numDPtoAdd;
+    }
+
+    pushFront(n: number): number {
+        if (this.validStart === this.validEnd)
+            this.validStart = this.validEnd = BUFFER_POINT_CAPACITY;
+
+        const oldVaildStart = this.validStart;
+        this.validStart = Math.max(0,  (Math.floor(this.validStart / POINT_PER_DATAPOINT) - n) * POINT_PER_DATAPOINT);
+        const numDPtoAdd = Math.floor((oldVaildStart - this.validStart) / POINT_PER_DATAPOINT);
+        this.syncPoints(n - numDPtoAdd + 1, this.validStart, oldVaildStart);
+
+        return n - numDPtoAdd;
     }
 
     draw(renderIndex: { min: number, max: number }) {
-        const first = Math.max(0, renderIndex.min - this.firstDataPointIndex);
-        const last = Math.min(this.length, renderIndex.max - this.firstDataPointIndex)
-        const count = last - first;
+        const first = Math.max(this.validStart, renderIndex.min * POINT_PER_DATAPOINT);
+        const last = Math.min(this.validEnd, renderIndex.max * POINT_PER_DATAPOINT)
+        const count = last - first
 
         const gl = this.gl;
         this.vao.bind();
-        gl.drawArrays(gl.TRIANGLE_STRIP, first * POINT_PER_DATAPOINT, count * POINT_PER_DATAPOINT);
+        gl.drawArrays(gl.TRIANGLE_STRIP, first, count);
+        return Math.floor(count / POINT_PER_DATAPOINT);
     }
 }
 
 /**
  * An array of `SeriesSegmentVertexArray` to represent a series
  *
- * `series.data`  index: 0  [1 ... C] [C+1 ... 2C] ... (C = `BUFFER_DATA_POINT_CAPACITY`)
- * `vertexArrays` index:     0         1           ...
+ * `series.data[0]` is not part of any VertexArray.
  */
 class SeriesVertexArray {
     private vertexArrays = [] as SeriesSegmentVertexArray[];
@@ -286,57 +315,121 @@ class SeriesVertexArray {
     ) {
     }
 
-    syncBuffer() {
+    private popFront() {
+        let numDPtoDelete = this.series.data.poped_front;
+        if (numDPtoDelete === 0)
+            return;
+
+        while (true) {
+            const activeArray = this.vertexArrays[0];
+            numDPtoDelete = activeArray.popFront(numDPtoDelete);
+            if (numDPtoDelete < 0)
+                break;
+            activeArray.delete();
+            this.vertexArrays.shift();
+        }
+    }
+    private popBack() {
+        let numDPtoDelete = this.series.data.poped_back;
+        if (numDPtoDelete === 0)
+            return;
+
+        while (true) {
+            const activeArray = this.vertexArrays[this.vertexArrays.length - 1];
+            numDPtoDelete = activeArray.popBack(numDPtoDelete);
+            if (numDPtoDelete < 0)
+                break;
+            activeArray.delete();
+            this.vertexArrays.pop();
+        }
+    }
+
+    private newArray() {
+        return new SeriesSegmentVertexArray(this.gl, this.series.data);
+    }
+    private pushFront() {
+        let numDPtoAdd = this.series.data.pushed_front;
+        if (numDPtoAdd === 0)
+            return;
+
         let activeArray: SeriesSegmentVertexArray;
-        let bufferedDataPointNum = 1;
 
         const newArray = () => {
-            activeArray = new SeriesSegmentVertexArray(this.gl, this.series.data, bufferedDataPointNum);
+            activeArray = this.newArray();
+            this.vertexArrays.unshift(activeArray);
+        }
+
+        if (this.vertexArrays.length === 0) {
+            if (numDPtoAdd < 2)
+                return; // Not enough data
+            newArray();
+            numDPtoAdd--;
+        }
+        activeArray = this.vertexArrays[0];
+
+        while (true) {
+            numDPtoAdd = activeArray.pushFront(numDPtoAdd);
+            if (numDPtoAdd <= 0)
+                break;
+            newArray();
+        }
+    }
+
+    private pushBack() {
+        let numDPtoAdd = this.series.data.pushed_back;
+        if (numDPtoAdd === 0)
+            return
+
+        let activeArray: SeriesSegmentVertexArray;
+
+        const newArray = () => {
+            activeArray = this.newArray();
             this.vertexArrays.push(activeArray);
         }
 
-        if (this.vertexArrays.length > 0) {
-            const lastVertexArray = this.vertexArrays[this.vertexArrays.length - 1];
-            bufferedDataPointNum = lastVertexArray.firstDataPointIndex + lastVertexArray.length;
-            if (bufferedDataPointNum > this.series.data.length) {
-                throw new Error('remove data unsupported.');
+        if (this.vertexArrays.length === 0) {
+            if (numDPtoAdd < 2) {
+                return; // Not enough data
             }
-            if (bufferedDataPointNum === this.series.data.length) {
-                return;
-            }
-            activeArray = lastVertexArray;
-        } else if (this.series.data.length >= 2) {
             newArray();
-            activeArray = activeArray!;
-        } else {
-            return; // Not enough data
+            numDPtoAdd--;
         }
+        activeArray = this.vertexArrays[this.vertexArrays.length - 1];
 
         while (true) {
-            bufferedDataPointNum = activeArray.addDataPoints();
-            if (bufferedDataPointNum >= this.series.data.length) {
-                if (bufferedDataPointNum > this.series.data.length) { throw Error('Assertion failed.'); }
+            numDPtoAdd = activeArray.pushBack(numDPtoAdd);
+            if (numDPtoAdd <= 0) {
                 break;
             }
             newArray();
         }
     }
 
+    syncBuffer() {
+        this.popFront();
+        this.popBack();
+        this.pushFront();
+        this.pushBack();
+    }
+
     draw(renderDomain: { min: number, max: number }) {
         const data = this.series.data;
-        if (this.vertexArrays.length === 0 || data[0].x > renderDomain.max || data[data.length - 1].x < renderDomain.min) {
+        if (this.vertexArrays.length === 0 || data[0].x > renderDomain.max || data[data.length - 1].x < renderDomain.min)
             return;
-        }
 
+        let offset = this.vertexArrays[0].validStart / POINT_PER_DATAPOINT - 1;
         const key = (d: DataPoint) => d.x
-        const minIndex = domainSearch(data, 1, data.length, renderDomain.min, key);
-        const maxIndex = domainSearch(data, minIndex, data.length - 1, renderDomain.max, key) + 1;
-        const minArrayIndex = Math.floor((minIndex - 1) / BUFFER_DATA_POINT_CAPACITY);
-        const maxArrayIndex = Math.ceil((maxIndex - 1) / BUFFER_DATA_POINT_CAPACITY);
+        const minIndex = domainSearch(data, 1, data.length, renderDomain.min, key) + offset;
+        const maxIndex = domainSearch(data, minIndex, data.length - 1, renderDomain.max, key) + 1 + offset;
+        const minArrayIndex = Math.floor(minIndex / BUFFER_DATA_POINT_CAPACITY);
+        const maxArrayIndex = Math.ceil(maxIndex / BUFFER_DATA_POINT_CAPACITY);
 
-        const renderIndex = { min: minIndex, max: maxIndex };
         for (let i = minArrayIndex; i < maxArrayIndex; i++) {
-            this.vertexArrays[i].draw(renderIndex);
+            const arrOffset = i * BUFFER_DATA_POINT_CAPACITY
+            offset += this.vertexArrays[i].draw({
+                min: minIndex - arrOffset,
+                max: maxIndex - arrOffset,
+            });
         }
     }
 }

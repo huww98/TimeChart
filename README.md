@@ -124,36 +124,53 @@ For users who use HTML script tag to import TimeChart, use this instead:
 ```
 [Demo](https://huww98.github.io/TimeChart/demo/plugins/assemble.html)
 
-### Data
+### Dynamic Data
 
-To add data dynamically, just push new data points to the data array, then call `chart.update()`.
+To add/remove data dynamically, just change the data array with conventional array prototype methods, then call `chart.update()`.
 
-Some restrictions to the provided data:
-* You can only add new data. Once you call `update`, you can not edit or delete existing data.
+Some restrictions to the data manipulations:
+* The prototype of data array will be overridden. Then this array can only be modified with the following overrode array prototype method: `push`, `pop`, `shift`, `unshift`, `splice`.
+* Once you call `update`, the data will be synchronized to GPU. Then these data can only be deleted from both ends.
+  ```JavaScript
+  const data = [...];  // Assume it contains 10 data points
+  const chart = new TimeChart(el, {
+      series: [{ data }],
+  });
+  data.push({x, y}, {x, y}, {x, y});  // OK
+  data.slice(-2, 1);  // OK, data not synced yet
+  chart.update();
+  data.slice(-2, 1);  // RangeError
+  data.slice(-2, 2);  // OK, delete the last two data points
+  data.pop();         // OK, delete the last data point
+  data.slice(0, 2);   // OK, delete the first two data points
+  chart.update();     // See data deleted
+
+  Array.prototype.pop.call(data)  // Wrong. Only the overridden methods should be used
+  ```
 * The x value of each data point must be monotonically increasing.
 * Due to the limitation of single-precision floating-point numbers, if the absolute value of x is large (e.g. `Date.now()`), you may need to use `baseTime` option  (see below) to make the chart render properly.
-```JavaScript
-let startTime = Date.now(); // Set the start time e.g. 1626186924936
+  ```JavaScript
+  let startTime = Date.now(); // Set the start time e.g.   1626186924936
 
-let bar = []; // holds the series data
+  let bar = []; // holds the series data
 
-// build the chart
-const chart = new TimeChart(el, {
-    series: [{
-        name: 'foo',
-        data: bar
-    }],
-    baseTime: startTime,
-});
+  // build the chart
+  const chart = new TimeChart(el, {
+      series: [{
+          name: 'foo',
+          data: bar
+      }],
+      baseTime: startTime,
+  });
 
-// update data
-bar.push({x: 1, y: 10}); // 1ms after start time
-bar.push({x: 43, y: 6.04}); // 43ms after start time
-bar.push({x: 89, y: 3.95}); // 89ms after start time
+  // update data
+  bar.push({x: 1, y: 10}); // 1ms after start time
+  bar.push({x: 43, y: 6.04}); // 43ms after start time
+  bar.push({x: 89, y: 3.95}); // 89ms after start time
 
-// update chart
-chart.update();
-```
+  // update chart
+  chart.update();
+  ```
 
 ### Global Options
 

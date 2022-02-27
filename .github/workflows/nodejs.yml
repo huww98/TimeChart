@@ -12,14 +12,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - name: Cache node modules
-        uses: actions/cache@v1
+      - uses: actions/setup-node@v2
         with:
-          path: ~/.npm
-          key: ${{ runner.os }}-npm-timechart-${{ hashFiles('package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-npm-timechart-
-            ${{ runner.os }}-npm-
+          node-version: '14'
+          cache: 'npm'
       - run: npm ci
       - run: npm test
       - name: git commit
@@ -29,5 +25,3 @@ jobs:
           git config user.name "GitHub Action"
           git commit -m "Build"
           git push -f origin HEAD:gh-pages
-        env:
-          CI: true

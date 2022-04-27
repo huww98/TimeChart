@@ -360,9 +360,10 @@ class SeriesVertexArray {
         }
 
         if (this.vertexArrays.length === 0) {
-            if (numDPtoAdd < 2)
-                return; // Not enough data
             newArray();
+            // The very first data point is not drawn
+            if (numDPtoAdd < 2)
+                return;
             numDPtoAdd--;
         }
         activeArray = this.vertexArrays[0];
@@ -388,10 +389,10 @@ class SeriesVertexArray {
         }
 
         if (this.vertexArrays.length === 0) {
-            if (numDPtoAdd < 2) {
-                return; // Not enough data
-            }
             newArray();
+            // The very first data point is not drawn
+            if (numDPtoAdd < 2)
+                return;
             numDPtoAdd--;
         }
         activeArray = this.vertexArrays[this.vertexArrays.length - 1];

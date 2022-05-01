@@ -1,6 +1,6 @@
 {
     "name": "timechart",
-    "version": "1.0.0-beta.6",
+    "version": "1.0.0-beta.7",
     "description": "An chart library specialized for large-scale time-series data, built on WebGL.",
     "repository": {
         "url": "https://github.com/huww98/TimeChart.git",

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>TimeChart Demo (Large data range)</title>
+</head>
+<body>
+    <p>Test if we have precision issue with very large X</p>
+    <div id="chart" style="width: 100%; height: 640px;"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/d3-array@3"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3-color@3"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3-format@3"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3-interpolate@3"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3-time@3"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3-time-format@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3-scale@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3-selection@3"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3-axis@3"></script>
+
+    <script src="../dist/timechart.min.js"></script>
+    <script>
+        const el = document.getElementById('chart');
+        const data = [];
+
+        let y = 10;
+        let timeStep = 100000000;
+
+        for (let x = 0; x < 1000000 * timeStep; x = x + timeStep) {
+            data.push({ x: x, y: y });
+            y = y + 10;
+
+            if (y > 100) {
+                y = 0;
+            }
+        }
+
+        const chart = new TimeChart(el, {
+            baseTime: Date.now(),
+            series: [
+                { name: 'Line 1', data: data, color: 'blue' },
+            ],
+            zoom: { x: { autoRange: true } },
+            tooltip: true,
+            renderPaddingLeft: 45,
+        });
+    </script>
+</body>
+</html>

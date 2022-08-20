@@ -20,7 +20,7 @@ uniform vec2 uProjectionScale;
 uniform float uLineWidth;
 
 void main() {
-    vec2 cssPose = uModelScale * aDataPoint + uModelTranslation;
+    vec2 cssPose = uModelScale * (aDataPoint + uModelTranslation);
     vec2 dir = uModelScale * aDir;
     dir = normalize(dir);
     vec2 pos2d = uProjectionScale * (cssPose + vec2(-dir.y, dir.x) * uLineWidth);
@@ -506,27 +506,32 @@ export class LineChartRenderer {
         }
     }
 
-    private ySvgToView(v: number) {
-        return -v + this.renderHeight / 2 + this.options.renderPaddingTop;
-    }
-
-    private xSvgToView(v: number) {
-        return v - this.renderWidth / 2 - this.options.renderPaddingLeft;
-    }
-
     syncDomain() {
         this.syncViewport();
         const m = this.model;
         const gl = this.gl;
 
-        const zero = [this.xSvgToView(m.xScale(0)), this.ySvgToView(m.yScale(0))];
-        const one = [this.xSvgToView(m.xScale(1)), this.ySvgToView(m.yScale(1))];
+        // for any x,
+        // (x - domain[0]) / (domain[1] - domain[0]) * (range[1] - range[0]) + range[0] - W / 2 - padding = s * (x + t)
+        // => s = (range[1] - range[0]) / (domain[1] - domain[0])
+        //    t = (range[0] - W / 2 - padding) / s - domain[0]
 
         // Not using vec2 for precision
-        const scaling = [one[0] - zero[0], one[1] - zero[1]]
+        const xDomain = m.xScale.domain();
+        const xRange = m.xScale.range();
+        const yDomain = m.yScale.domain();
+        const yRange = m.yScale.range();
+        const s = [
+            (xRange[1] - xRange[0]) / (xDomain[1] - xDomain[0]),
+            (yRange[0] - yRange[1]) / (yDomain[1] - yDomain[0]),
+        ];
+        const t = [
+            (xRange[0] - this.renderWidth / 2 - this.options.renderPaddingLeft) / s[0] - xDomain[0],
+            -(yRange[0] - this.renderHeight / 2 - this.options.renderPaddingTop) / s[1] - yDomain[0],
+        ];
 
-        gl.uniform2fv(this.program.locations.uModelScale, scaling);
-        gl.uniform2fv(this.program.locations.uModelTranslation, zero);
+        gl.uniform2fv(this.program.locations.uModelScale, s);
+        gl.uniform2fv(this.program.locations.uModelTranslation, t);
     }
 }
 

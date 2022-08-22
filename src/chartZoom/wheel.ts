@@ -34,7 +34,7 @@ export class ChartZoomWheel {
                 zoom: 0,
             }
         };
-        if (event.ctrlKey) { // zoom
+        if (event.ctrlKey || event.metaKey) { // zoom
             if (event.altKey) {
                 transform[DIRECTION.X].zoom = deltaX;
                 transform[DIRECTION.Y].zoom = deltaY;

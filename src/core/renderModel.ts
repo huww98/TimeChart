@@ -54,12 +54,12 @@ export class RenderModel {
 
     updated = new EventDispatcher();
     disposing = new EventDispatcher();
-    private disposed = false;
+    readonly abortController = new AbortController();
 
     dispose() {
-        if (!this.disposed) {
+        if (!this.abortController.signal.aborted) {
+            this.abortController.abort();
             this.disposing.dispatch();
-            this.disposed = true;
         }
     }
 
@@ -120,9 +120,10 @@ export class RenderModel {
             return;
         }
         this.redrawRequested = true;
+        const signal = this.abortController.signal;
         requestAnimationFrame((time) => {
             this.redrawRequested = false;
-            if (!this.disposed) {
+            if (!signal.aborted) {
                 this.update();
             }
         });

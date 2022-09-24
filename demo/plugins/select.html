@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Select Zoom Demo</title>
+</head>
+<body>
+    <h1>Select & Zoom with Mouse</h1>
+    <p>Drag with your mouse primary button</p>
+    <div id="chart" style="width: 100%; height: 640px;"></div>
+    <form>
+        <label for="x">X</label>
+        <input type="checkbox" id="x" name="x" checked>
+
+        <label for="y">Y</label>
+        <input type="checkbox" id="y" name="y">
+    </form>
+
+    <script src="https://cdn.jsdelivr.net/npm/d3-array@3"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3-color@3"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3-format@3"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3-interpolate@3"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3-scale@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3-selection@3"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3-axis@3"></script>
+
+    <script src="../../dist/timechart.min.js"></script>
+    <script src="../../dist/timechart.plugins_extra.min.js"></script>
+
+    <script>
+        const el = document.getElementById('chart');
+        const data = [];
+        for (let x = 0; x < 10000 * 10; x+=10) {
+            data.push({x, y: Math.random()});
+        }
+        const chart = new TimeChart.core(el, {
+            series: [{ data, name: 'Random' }],
+            xScaleType: d3.scaleLinear,
+            plugins: {
+                lineChart: TimeChart.plugins.lineChart,
+                d3Axis: TimeChart.plugins.d3Axis,
+                selectZoom: new TimeChart.plugins_extra.SelectZoomPlugin(),
+            }
+        });
+
+        const form = document.querySelector('form');
+        function syncSelectZoom() {
+            const { x, y } = form;
+            chart.plugins.selectZoom.options.enableX = x.checked;
+            chart.plugins.selectZoom.options.enableY = y.checked;
+        }
+        form.addEventListener('change', syncSelectZoom);
+        syncSelectZoom();
+    </script>
+</body>
+</html>

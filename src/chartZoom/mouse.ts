@@ -43,9 +43,10 @@ export class ChartZoomMouse {
     }
 
     private onMouseDown(event: PointerEvent) {
-        if (event.pointerType !== 'mouse') {
+        if (event.pointerType !== 'mouse')
             return;
-        }
+        if ((event.buttons & this.options.panMouseButtons) === 0)
+            return;
         this.el.setPointerCapture(event.pointerId);
         this.previousPoint = this.point(event);
         this.el.style.cursor = 'grabbing';

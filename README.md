@@ -307,15 +307,19 @@ const chart = new TimeChart(el, {
 Then old `chart.options.chart` is not available. Use `chart.plugins.zoom.options` instead.
 
 
-* autoRange (boolean): Determine maxDomain, minDomain automatically.
+* panMouseButtons (number): allowed mouth buttons to trigger panning. see [MouseEvent.buttons](https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/buttons)
+
+  default; 1 | 2 | 4
+
+* autoRange (boolean): Per axis. Determine maxDomain, minDomain automatically.
 
   default: false
 
-* maxDomain / minDomain (number): The limit of xRange / yRange
+* maxDomain / minDomain (number): Per axis. The limit of xRange / yRange
 
   default: Infinity / -Infinity
 
-* maxDomainExtent / minDomainExtent (number): The limit of `max - min` in xRange / yRange
+* maxDomainExtent / minDomainExtent (number): Per axis. The limit of `max - min` in xRange / yRange
 
   default: Infinity / 0
 

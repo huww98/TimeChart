@@ -11,11 +11,17 @@ export const defaultAxisOptions = {
     maxDomainExtent: Infinity,
 } as const;
 
-type WithDefaults<T, TDefault> = {x?: T&TDefault, y?: T&TDefault}
+export const defaultOptions = {
+    panMouseButtons: 1 | 2 | 4,
+} as const;
+
+type WithDefaults<T, TDefault> = {x?: T&TDefault, y?: T&TDefault} & typeof defaultOptions;
 
 export function resolveOptions<T, TDefault extends Object>(defaults: TDefault, o?: {x?: T, y?: T}): WithDefaults<T, TDefault> {
     if (!o)
         o = {}
+    if (!defaultOptions.isPrototypeOf(o))
+        Object.setPrototypeOf(o, defaultOptions);
     const resolveAxis = (ao?: T) => {
         if (ao && !defaults.isPrototypeOf(ao))
             Object.setPrototypeOf(ao, defaults);

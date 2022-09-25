@@ -1,4 +1,5 @@
-import { ChartZoom, defaultAxisOptions, resolveOptions } from "../chartZoom";
+import { ChartZoom, defaultAxisOptions, resolveOptions,  } from "../chartZoom";
+import { ResolvedOptions as ResolvedChartZoomOptions } from "../chartZoom/options";
 import core from "../core";
 import { MinMax } from "../core/renderModel";
 import { ResolvedZoomOptions, TimeChartPlugins, ZoomOptions } from "../options";
@@ -28,11 +29,13 @@ export class TimeChartZoom {
     }
 
     private registerZoom(chart: core<TimeChartPlugins>) {
-        const z = new ChartZoom(chart.contentBoxDetector.node, {
-            x: this.options.x && Object.assign(Object.create(this.options.x), { scale: chart.model.xScale }),
-            y: this.options.y && Object.assign(Object.create(this.options.y), { scale: chart.model.yScale }),
-        });
-        const o = z.options as ResolvedZoomOptions & typeof z.options
+        if (this.options.x)
+            Object.setPrototypeOf(this.options.x, Object.assign(Object.create(defaults), { scale: chart.model.xScale }));
+        if (this.options.y)
+            Object.setPrototypeOf(this.options.y, Object.assign(Object.create(defaults), { scale: chart.model.yScale }));
+
+        const o = this.options as ResolvedZoomOptions & ResolvedChartZoomOptions;
+        const z = new ChartZoom(chart.contentBoxDetector.node, o);
         chart.model.updated.on(() => {
             this.applyAutoRange(o.x, chart.model.xRange);
             this.applyAutoRange(o.y, chart.model.yRange);

@@ -52,7 +52,7 @@ export class SelectZoom {
     onMouseDown(ev: PointerEvent) {
         if (this.start !== null)
             return;
-        if (ev.type === 'mouse' && (ev.buttons & this.options.mouseButtons) === 0)
+        if (ev.pointerType === 'mouse' && (ev.buttons & this.options.mouseButtons) === 0)
             return;
         const el = this.chart.contentBoxDetector.node;
         this.start = {

@@ -8,7 +8,7 @@
 </head>
 <body>
     <h1>Select & Zoom with Mouse</h1>
-    <p>Drag with your mouse primary button</p>
+    <p>Drag with your mouse primary button. Use middle mouse button to pan.</p>
     <div id="chart" style="width: 100%; height: 640px;"></div>
     <form>
         <label for="x">X</label>
@@ -41,6 +41,10 @@
             plugins: {
                 lineChart: TimeChart.plugins.lineChart,
                 d3Axis: TimeChart.plugins.d3Axis,
+                zoom: new TimeChart.plugins.TimeChartZoomPlugin({
+                    x: { autoRange: true },
+                    panMouseButtons: 4,
+                }),
                 selectZoom: new TimeChart.plugins_extra.SelectZoomPlugin(),
             }
         });

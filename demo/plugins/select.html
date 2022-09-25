@@ -46,7 +46,9 @@
                     panMouseButtons: 4,
                     touchMinPoints: 2,
                 }),
-                selectZoom: new TimeChart.plugins_extra.SelectZoomPlugin(),
+                selectZoom: new TimeChart.plugins_extra.SelectZoomPlugin({
+                    cancelOnSecondPointer: true,
+                }),
             }
         });
 

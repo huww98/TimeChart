@@ -5,12 +5,14 @@ export interface SelectZoomOptions {
     mouseButtons: number;
     enableX: boolean;
     enableY: boolean;
+    cancelOnSecondPointer: boolean;
 }
 
 const defaultOptions = {
     mouseButtons: 1,
     enableX: true,
     enableY: true,
+    cancelOnSecondPointer: false,
 } as const;
 
 interface Point { x : number; y : number; };
@@ -41,6 +43,15 @@ export class SelectZoom {
 
     private start: {p: Point, id: number} | null = null;
 
+    private reset() {
+        if (this.start === null)
+            return;
+        const el = this.chart.contentBoxDetector.node;
+        el.releasePointerCapture(this.start.id);
+        this.visual.style.visibility = 'hidden';
+        this.start = null;
+    }
+
     private getPoint(ev: PointerEvent): Point {
         const boundingRect = this.chart.svgLayer.svgNode.getBoundingClientRect();
         return {
@@ -50,8 +61,11 @@ export class SelectZoom {
     }
 
     onMouseDown(ev: PointerEvent) {
-        if (this.start !== null)
+        if (this.start !== null) {
+            if (this.options.cancelOnSecondPointer)
+                this.reset();
             return;
+        }
         if (ev.pointerType === 'mouse' && (ev.buttons & this.options.mouseButtons) === 0)
             return;
         const el = this.chart.contentBoxDetector.node;
@@ -97,9 +111,6 @@ export class SelectZoom {
     onMouseUp(ev: PointerEvent) {
         if (ev.pointerId !== this.start?.id)
             return;
-        const el = this.chart.contentBoxDetector.node;
-        el.releasePointerCapture(ev.pointerId);
-        this.visual.style.visibility = 'hidden';
 
         const p = this.getPoint(ev);
 
@@ -133,7 +144,7 @@ export class SelectZoom {
         if (changed)
             this.chart.model.requestRedraw();
 
-        this.start = null;
+        this.reset();
     }
 }
 

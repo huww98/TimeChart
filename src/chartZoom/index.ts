@@ -13,6 +13,7 @@ export const defaultAxisOptions = {
 
 export const defaultOptions = {
     panMouseButtons: 1 | 2 | 4,
+    touchMinPoints: 1,
 } as const;
 
 type WithDefaults<T, TDefault> = {x?: T&TDefault, y?: T&TDefault} & typeof defaultOptions;

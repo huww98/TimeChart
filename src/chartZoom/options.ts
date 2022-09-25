@@ -29,12 +29,14 @@ export interface ResolvedOptions {
     x?: ResolvedAxisOptions;
     y?: ResolvedAxisOptions;
     panMouseButtons: number;
+    touchMinPoints: number;
 }
 
 export interface ChartZoomOptions {
     x?: AxisOptions;
     y?: AxisOptions;
     panMouseButtons?: number;
+    touchMinPoints?: number;
 }
 
 export interface CapableElement extends Element, ElementCSSInlineStyle {

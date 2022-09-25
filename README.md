@@ -309,7 +309,11 @@ Then old `chart.options.chart` is not available. Use `chart.plugins.zoom.options
 
 * panMouseButtons (number): allowed mouth buttons to trigger panning. see [MouseEvent.buttons](https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/buttons)
 
-  default; 1 | 2 | 4
+  default: 1 | 2 | 4
+
+* touchMinPoints (number): minimum number of touch points needed for the chart to respond to the gesture. Useful if you want to reserve some gesture for other plugins (e.g. selectZoom).
+
+  default: 1
 
 * autoRange (boolean): Per axis. Determine maxDomain, minDomain automatically.
 

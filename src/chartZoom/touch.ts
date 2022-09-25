@@ -66,6 +66,10 @@ export class ChartZoomTouch {
     }
 
     private touchPoints(touches: TouchList) {
+        if (touches.length < this.options.touchMinPoints) {
+            this.previousPoints.clear();
+            return;
+        }
         const boundingBox = this.el.getBoundingClientRect();
         const ts = new Map([...touches].map(t => [t.identifier, {
             [DIRECTION.X]: t.clientX - boundingBox.left,
@@ -119,7 +123,7 @@ export class ChartZoomTouch {
     }
 
     private onTouchEnd(event: TouchEvent) {
-        if (event.touches.length < 2) {
+        if (event.touches.length === 0) {
             this.majorDirection = DIRECTION.UNKNOWN;
         }
         this.touchPoints(event.touches);

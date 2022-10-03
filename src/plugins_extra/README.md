@@ -22,3 +22,8 @@ Then access the plugins from `TimeChart.plugins_extra`.
 
 Display events at a point in time with vertical lines.
 [Demo](https://huww98.github.io/TimeChart/demo/plugins/events.html)
+
+### Select Zoom
+
+Zoom the chart by selecting a rectangle area.
+[Demo](https://huww98.github.io/TimeChart/demo/plugins/select.html)

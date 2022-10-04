@@ -8,8 +8,10 @@ import { DataPointsBuffer } from "../core/dataPointsBuffer";
 
 
 const enum VertexAttribLocations {
-    DATA_POINT = 0,
-    DIR = 1,
+    FLAGS = 0,
+    DATA_POINT0 = 1,
+    DATA_POINT1 = 2,
+    DATA_POINT2 = 3,
 }
 
 function vsSource(gl: WebGL2RenderingContext | WebGLRenderingContext) {
@@ -20,22 +22,40 @@ uniform vec2 uProjectionScale;
 uniform float uLineWidth;
 
 void main() {
-    vec2 cssPose = uModelScale * (aDataPoint + uModelTranslation);
-    vec2 dir = uModelScale * aDir;
-    dir = normalize(dir);
+# if defined(WEBGL1)
+    int flags = int(aFlags);
+# else
+    int flags = aFlags;
+# endif
+    int side = flags & 1;
+    int i = (flags >> 1) & 1;
+    int di = (flags >> 2) & 1;
+
+    vec2 dp[3] = vec2[3](aDataPoint0, aDataPoint1, aDataPoint2);
+    vec2 dir = dp[di + 1] - dp[di];
+    if (side == 1)
+        dir *= -1.;
+
+    vec2 cssPose = uModelScale * (dp[i] + uModelTranslation);
+    dir = normalize(uModelScale * dir);
     vec2 pos2d = uProjectionScale * (cssPose + vec2(-dir.y, dir.x) * uLineWidth);
     gl_Position = vec4(pos2d, 0, 1);
 }`;
 
-    if (gl instanceof WebGLRenderingContext) {
-        return `
-attribute vec2 aDataPoint;
-attribute vec2 aDir;
+    if (gl instanceof WebGL2RenderingContext) {
+        return `#version 300 es
+layout (location = ${VertexAttribLocations.FLAGS}) in lowp int aFlags;
+layout (location = ${VertexAttribLocations.DATA_POINT0}) in highp vec2 aDataPoint0;
+layout (location = ${VertexAttribLocations.DATA_POINT1}) in highp vec2 aDataPoint1;
+layout (location = ${VertexAttribLocations.DATA_POINT2}) in highp vec2 aDataPoint2;
 ${body}`;
     } else {
-        return `#version 300 es
-layout (location = ${VertexAttribLocations.DATA_POINT}) in vec2 aDataPoint;
-layout (location = ${VertexAttribLocations.DIR}) in vec2 aDir;
+        return `
+# define WEBGL1
+attribute lowp float aFlags;
+attribute highp vec2 aDataPoints0;
+attribute highp vec2 aDataPoints1;
+attribute highp vec2 aDataPoints2;
 ${body}`;
     }
 }
@@ -43,14 +63,7 @@ ${body}`;
 function fsSource(gl: WebGL2RenderingContext | WebGLRenderingContext) {
     const body = `
 `;
-    if (gl instanceof WebGLRenderingContext) {
-        return `
-precision lowp float;
-uniform vec4 uColor;
-void main() {
-    gl_FragColor = uColor;
-}`;
-    } else {
+    if (gl instanceof WebGL2RenderingContext) {
         return `#version 300 es
 precision lowp float;
 uniform vec4 uColor;
@@ -58,7 +71,13 @@ out vec4 outColor;
 void main() {
     outColor = uColor;
 }`;
-
+    } else {
+        return `
+precision lowp float;
+uniform vec4 uColor;
+void main() {
+    gl_FragColor = uColor;
+}`;
     }
 }
 
@@ -74,8 +93,10 @@ class LineChartWebGLProgram extends LinkedWebGLProgram {
         super(gl, vsSource(gl), fsSource(gl), debug);
 
         if (gl instanceof WebGLRenderingContext) {
-            gl.bindAttribLocation(this.program, VertexAttribLocations.DATA_POINT, 'aDataPoint');
-            gl.bindAttribLocation(this.program, VertexAttribLocations.DIR, 'aDir');
+            gl.bindAttribLocation(this.program, VertexAttribLocations.FLAGS, 'aFlags');
+            gl.bindAttribLocation(this.program, VertexAttribLocations.DATA_POINT0, 'aDataPoint0');
+            gl.bindAttribLocation(this.program, VertexAttribLocations.DATA_POINT1, 'aDataPoint1');
+            gl.bindAttribLocation(this.program, VertexAttribLocations.DATA_POINT2, 'aDataPoint2');
         }
 
         this.link();
@@ -92,13 +113,11 @@ class LineChartWebGLProgram extends LinkedWebGLProgram {
     }
 }
 
-const INDEX_PER_POINT = 4;
-const POINT_PER_DATAPOINT = 4;
-const INDEX_PER_DATAPOINT = INDEX_PER_POINT * POINT_PER_DATAPOINT;
-const BYTES_PER_POINT = INDEX_PER_POINT * Float32Array.BYTES_PER_ELEMENT;
-const BUFFER_DATA_POINT_CAPACITY = 128 * 1024;
-const BUFFER_POINT_CAPACITY = BUFFER_DATA_POINT_CAPACITY * POINT_PER_DATAPOINT + 2;
-const BUFFER_CAPACITY = BUFFER_POINT_CAPACITY * INDEX_PER_POINT;
+const INDEX_PER_DATAPOINT = 2;
+const BYTES_PER_DATAPOINT = INDEX_PER_DATAPOINT * Float32Array.BYTES_PER_ELEMENT;
+const BUFFER_INTERVAL_CAPACITY = 512 * 1024;
+const BUFFER_POINT_CAPACITY = BUFFER_INTERVAL_CAPACITY + 2;
+const BUFFER_CAPACITY = BUFFER_POINT_CAPACITY * INDEX_PER_DATAPOINT;
 
 interface IVAO {
     bind(): void;
@@ -148,20 +167,35 @@ class SeriesSegmentVertexArray {
     dataBuffer: WebGLBuffer;
     validStart = 0;
     validEnd = 0;
+    lastDrawStart = -1;
 
     constructor(
         private gl: WebGL2RenderingContext | WebGLRenderingContext,
         private dataPoints: DataPointsBuffer,
+        globalInit: () => void,
     ) {
         this.dataBuffer = throwIfFalsy(gl.createBuffer());
         const bindFunc = () => {
+            globalInit();
+
             gl.bindBuffer(gl.ARRAY_BUFFER, this.dataBuffer);
 
-            gl.enableVertexAttribArray(VertexAttribLocations.DATA_POINT);
-            gl.vertexAttribPointer(VertexAttribLocations.DATA_POINT, 2, gl.FLOAT, false, BYTES_PER_POINT, 0);
-
-            gl.enableVertexAttribArray(VertexAttribLocations.DIR);
-            gl.vertexAttribPointer(VertexAttribLocations.DIR, 2, gl.FLOAT, false, BYTES_PER_POINT, 2 * Float32Array.BYTES_PER_ELEMENT);
+            gl.enableVertexAttribArray(VertexAttribLocations.DATA_POINT0);
+            gl.enableVertexAttribArray(VertexAttribLocations.DATA_POINT1);
+            gl.enableVertexAttribArray(VertexAttribLocations.DATA_POINT2);
+            if (gl instanceof WebGL2RenderingContext) {
+                gl.vertexAttribDivisor(VertexAttribLocations.DATA_POINT0, 1);
+                gl.vertexAttribDivisor(VertexAttribLocations.DATA_POINT1, 1);
+                gl.vertexAttribDivisor(VertexAttribLocations.DATA_POINT2, 1);
+            } else {
+                const ext = gl.getExtension('ANGLE_instanced_arrays');
+                if (!ext) {
+                    throw new Error('ANGLE_instanced_arrays not supported');
+                }
+                ext.vertexAttribDivisorANGLE(VertexAttribLocations.DATA_POINT0, 1);
+                ext.vertexAttribDivisorANGLE(VertexAttribLocations.DATA_POINT1, 1);
+                ext.vertexAttribDivisorANGLE(VertexAttribLocations.DATA_POINT2, 1);
+            }
         }
         if (gl instanceof WebGLRenderingContext) {
             const vaoExt = gl.getExtension('OES_vertex_array_object');
@@ -204,78 +238,44 @@ class SeriesSegmentVertexArray {
         return newVaildStartDP - Math.floor(this.validEnd / POINT_PER_DATAPOINT);
     }
 
-    private syncPoints(start: number, bufferStart: number, bufferEnd: number) {
-        const dataPoints = this.dataPoints;
-        const n = bufferEnd - bufferStart;
-        const buffer = new Float32Array(n * INDEX_PER_POINT);
+    private syncPoints(start: number, n: number, bufferPos: number) {
+        const dps = this.dataPoints;
+        const posVaild = (pos: number) => pos >= this.validStart && pos < this.validEnd;
+        const repeatTail = bufferPos + n < BUFFER_POINT_CAPACITY && !posVaild(bufferPos + n)
+        let nUpload = n + (repeatTail ? 1 : 0);
+
+        const buffer = new Float32Array(nUpload * INDEX_PER_DATAPOINT);
         let bi = 0;
-        const vDP = vec2.create()
-        const vPreviousDP = vec2.create()
-        const dir1 = vec2.create();
-        const dir2 = vec2.create();
 
-        function calc(dp: DataPoint, previousDP: DataPoint) {
-            vDP[0] = dp.x;
-            vDP[1] = dp.y;
-            vPreviousDP[0] = previousDP.x;
-            vPreviousDP[1] = previousDP.y;
-            vec2.subtract(dir1, vDP, vPreviousDP);
-            vec2.normalize(dir1, dir1);
-            vec2.negate(dir2, dir1);
-        }
-
-        function put(v: vec2) {
-            buffer[bi] = v[0];
-            buffer[bi + 1] = v[1];
+        function put(dp: DataPoint) {
+            buffer[bi] = dp.x;
+            buffer[bi + 1] = dp.y;
             bi += 2;
         }
 
-        const numDPtoAdd = Math.floor(n / POINT_PER_DATAPOINT)
-        let previousDP = dataPoints[start - 1];
-        for (let i = 0; i < numDPtoAdd; i++) {
-            const dp = dataPoints[start + i];
-            calc(dp, previousDP);
-            previousDP = dp;
+        for (let i = 0; i < n; i++)
+            put(dps[start + i]);
+        if (repeatTail)
+            put(dps[start + n - 1]);
 
-            put(vPreviousDP);
-            put(dir1);
-            put(vPreviousDP);
-            put(dir2);
-
-            put(vDP);
-            put(dir1);
-            put(vDP);
-            put(dir2);
-        }
-
-        if (bi < buffer.length) {  // Overflow
-            calc(dataPoints[start + numDPtoAdd], previousDP);
-            put(vPreviousDP);
-            put(dir1);
-            put(vPreviousDP);
-            put(dir2);
-        }
         if (bi !== buffer.length)
             throw Error('BUG!')
 
         const gl = this.gl;
         gl.bindBuffer(gl.ARRAY_BUFFER, this.dataBuffer);
-        gl.bufferSubData(gl.ARRAY_BUFFER, BYTES_PER_POINT * bufferStart, buffer);
+        gl.bufferSubData(gl.ARRAY_BUFFER, BYTES_PER_DATAPOINT * bufferPos, buffer);
+
+        this.validStart = Math.min(this.validStart, bufferPos);
+        this.validEnd = Math.max(this.validEnd, bufferPos + n);
     }
 
     /**
-     * @returns Number of datapoints remaining to be added.
+     * @returns Number of datapoints remaining to be added to other segments.
      */
     pushBack(n: number): number {
-        if (this.validStart === this.validEnd)
-            this.validStart = this.validEnd = 0;
-
-        const oldValidEnd = this.validEnd;
-        this.validEnd = Math.min(BUFFER_POINT_CAPACITY, this.validEnd + n * POINT_PER_DATAPOINT);
-        const numDPtoAdd = Math.floor((this.validEnd - oldValidEnd) / POINT_PER_DATAPOINT);
-        this.syncPoints(this.dataPoints.length - n, oldValidEnd, this.validEnd);
-
-        return n - numDPtoAdd;
+        const numDPToAdd = Math.min(n, BUFFER_POINT_CAPACITY - this.validEnd);
+        this.syncPoints(this.dataPoints.length - n, numDPToAdd, this.validEnd);
+        return n - Math.max(0, BUFFER_INTERVAL_CAPACITY - (this.validEnd - numDPToAdd));
     }
 
     pushFront(n: number): number {
@@ -290,29 +290,47 @@ class SeriesSegmentVertexArray {
         return n - numDPtoAdd;
     }
 
-    draw(renderIndex: { min: number, max: number }) {
-        const first = Math.max(this.validStart, renderIndex.min * POINT_PER_DATAPOINT);
-        const last = Math.min(this.validEnd, renderIndex.max * POINT_PER_DATAPOINT)
+    /**
+     * @param renderInterval [start, end) interval of data points, start from 0
+     */
+    draw(renderInterval: { start: number, end: number }) {
+        const first = Math.max(0, renderInterval.start);
+        const last = Math.min(BUFFER_INTERVAL_CAPACITY, renderInterval.end)
         const count = last - first
 
         const gl = this.gl;
         this.vao.bind();
-        gl.drawArrays(gl.TRIANGLE_STRIP, first, count);
-        return Math.floor(count / POINT_PER_DATAPOINT);
+
+        if (this.lastDrawStart !== first) {
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.dataBuffer);
+            for (let i = 0; i < 3; i++) {
+                gl.vertexAttribPointer(VertexAttribLocations.DATA_POINT0 + i, 2, gl.FLOAT, false, BYTES_PER_DATAPOINT, (first + i) * BYTES_PER_DATAPOINT);
+            }
+            this.lastDrawStart = first;
+        }
+        if (gl instanceof WebGL2RenderingContext) {
+            gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 6, count);
+        } else {
+            const ext = gl.getExtension('ANGLE_instanced_arrays');
+            ext!.drawArraysInstancedANGLE(gl.TRIANGLE_STRIP, 0, 6, count);
+        }
+        return count;
     }
 }
 
 /**
  * An array of `SeriesSegmentVertexArray` to represent a series
- *
- * `series.data[0]` is not part of any VertexArray.
  */
 class SeriesVertexArray {
     private vertexArrays = [] as SeriesSegmentVertexArray[];
+    private readonly flagsBuffer: WebGLBuffer;
     constructor(
         private gl: WebGL2RenderingContext | WebGLRenderingContext,
         private series: TimeChartSeriesOptions,
     ) {
+        this.flagsBuffer = throwIfFalsy(gl.createBuffer());
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.flagsBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Int8Array([0b000, 0b001, 0b010, 0b011, 0b110, 0b111]), gl.STATIC_DRAW);
     }
 
     private popFront() {
@@ -345,7 +363,16 @@ class SeriesVertexArray {
     }
 
     private newArray() {
-        return new SeriesSegmentVertexArray(this.gl, this.series.data);
+        const globalInit = () => {
+            const gl = this.gl;
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.flagsBuffer);
+            gl.enableVertexAttribArray(VertexAttribLocations.FLAGS);
+            if (gl instanceof WebGL2RenderingContext)
+                gl.vertexAttribIPointer(VertexAttribLocations.FLAGS, 1, gl.BYTE, 1, 0);
+            else
+                gl.vertexAttribPointer(VertexAttribLocations.FLAGS, 1, gl.BYTE, false, 1, 0);
+        };
+        return new SeriesSegmentVertexArray(this.gl, this.series.data, globalInit);
     }
     private pushFront() {
         let numDPtoAdd = this.series.data.pushed_front;
@@ -388,20 +415,14 @@ class SeriesVertexArray {
             this.vertexArrays.push(activeArray);
         }
 
-        if (this.vertexArrays.length === 0) {
+        if (this.vertexArrays.length === 0)
             newArray();
-            // The very first data point is not drawn
-            if (numDPtoAdd < 2)
-                return;
-            numDPtoAdd--;
-        }
         activeArray = this.vertexArrays[this.vertexArrays.length - 1];
 
         while (true) {
             numDPtoAdd = activeArray.pushBack(numDPtoAdd);
-            if (numDPtoAdd <= 0) {
+            if (numDPtoAdd <= 0)
                 break;
-            }
             newArray();
         }
     }
@@ -418,18 +439,18 @@ class SeriesVertexArray {
         if (this.vertexArrays.length === 0 || data[0].x > renderDomain.max || data[data.length - 1].x < renderDomain.min)
             return;
 
-        let offset = this.vertexArrays[0].validStart / POINT_PER_DATAPOINT - 1;
+        let offset = this.vertexArrays[0].validStart - 1;
         const key = (d: DataPoint) => d.x
-        const minIndex = domainSearch(data, 1, data.length, renderDomain.min, key) + offset;
-        const maxIndex = domainSearch(data, minIndex, data.length - 1, renderDomain.max, key) + 1 + offset;
-        const minArrayIndex = Math.floor(minIndex / BUFFER_DATA_POINT_CAPACITY);
-        const maxArrayIndex = Math.ceil(maxIndex / BUFFER_DATA_POINT_CAPACITY);
+        const startInterval = domainSearch(data, 1, data.length, renderDomain.min, key) + offset;
+        const endInterval = domainSearch(data, startInterval, data.length - 1, renderDomain.max, key) + 1 + offset;
+        const startArray = Math.floor(startInterval / BUFFER_INTERVAL_CAPACITY);
+        const endArray = Math.ceil(endInterval / BUFFER_INTERVAL_CAPACITY);
 
-        for (let i = minArrayIndex; i < maxArrayIndex; i++) {
-            const arrOffset = i * BUFFER_DATA_POINT_CAPACITY
+        for (let i = startArray; i < endArray; i++) {
+            const arrOffset = i * BUFFER_INTERVAL_CAPACITY
             offset += this.vertexArrays[i].draw({
-                min: minIndex - arrOffset,
-                max: maxIndex - arrOffset,
+                start: startInterval - arrOffset,
+                end: endInterval - arrOffset,
             });
         }
     }

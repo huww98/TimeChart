@@ -1,4 +1,4 @@
-import { NoPlugin, ResolvedCoreOptions, TimeChartOptions, TimeChartOptionsBase, TimeChartPlugins, TimeChartSeriesOptions } from '../options';
+import { LineType, NoPlugin, ResolvedCoreOptions, TimeChartOptions, TimeChartOptionsBase, TimeChartPlugins, TimeChartSeriesOptions } from '../options';
 import { rgb } from 'd3-color';
 import { scaleTime } from 'd3-scale';
 import { TimeChartPlugin } from '../plugins';
@@ -38,6 +38,8 @@ const defaultSeriesOptions = {
     name: '',
     color: null,
     visible: true,
+    lineType: LineType.Line,
+    stepLocation: 1.,
 } as const;
 
 type TPluginStates<TPlugins> = { [P in keyof TPlugins]: TPlugins[P] extends TimeChartPlugin<infer TState> ? TState : never };

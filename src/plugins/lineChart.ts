@@ -1,5 +1,5 @@
 import { DataPoint, RenderModel } from "../core/renderModel";
-import { resolveColorRGBA, ResolvedCoreOptions, TimeChartSeriesOptions } from '../options';
+import { resolveColorRGBA, ResolvedCoreOptions, TimeChartSeriesOptions, LineType } from '../options';
 import { domainSearch } from '../utils';
 import { vec2 } from 'gl-matrix';
 import { TimeChartPlugin } from '.';
@@ -7,13 +7,20 @@ import { LinkedWebGLProgram, throwIfFalsy } from './webGLUtils';
 import { DataPointsBuffer } from "../core/dataPointsBuffer";
 
 
-function vsSource(gl: WebGL2RenderingContext) {
-    return `#version 300 es
+const BUFFER_TEXTURE_WIDTH = 256;
+const BUFFER_TEXTURE_HEIGHT = 2048;
+const BUFFER_POINT_CAPACITY = BUFFER_TEXTURE_WIDTH * BUFFER_TEXTURE_HEIGHT;
+const BUFFER_INTERVAL_CAPACITY = BUFFER_POINT_CAPACITY - 2;
+
+class LineProgram extends LinkedWebGLProgram {
+    static VS_SOURCE = `#version 300 es
 uniform highp sampler2D uDataPoints;
 uniform vec2 uModelScale;
 uniform vec2 uModelTranslation;
 uniform vec2 uProjectionScale;
 uniform float uLineWidth;
+uniform int uLineType;
+uniform float uStepLocation;
 
 const int TEX_WIDTH = ${BUFFER_TEXTURE_WIDTH};
 const int TEX_HEIGHT = ${BUFFER_TEXTURE_HEIGHT};
@@ -30,38 +37,46 @@ void main() {
     int index = gl_VertexID >> 2;
 
     vec2 dp[2] = vec2[2](dataPoint(index), dataPoint(index + 1));
-    vec2 dir = dp[1] - dp[0];
-    if (side == 1)
-        dir *= -1.;
 
-    vec2 cssPose = uModelScale * (dp[di] + uModelTranslation);
-    dir = normalize(uModelScale * dir);
-    vec2 pos2d = uProjectionScale * (cssPose + vec2(-dir.y, dir.x) * uLineWidth);
+    vec2 base;
+    vec2 off;
+    if (uLineType == ${LineType.Line}) {
+        base = dp[di];
+        vec2 dir = dp[1] - dp[0];
+        dir = normalize(uModelScale * dir);
+        off = vec2(-dir.y, dir.x) * uLineWidth;
+    } else if (uLineType == ${LineType.Step}) {
+        base = vec2(dp[0].x * (1. - uStepLocation) + dp[1].x * uStepLocation, dp[di].y);
+        float up = sign(dp[0].y - dp[1].y);
+        off = vec2(uLineWidth * up, uLineWidth);
+    }
+
+    if (side == 1)
+        off = -off;
+    vec2 cssPose = uModelScale * (base + uModelTranslation);
+    vec2 pos2d = uProjectionScale * (cssPose + off);
     gl_Position = vec4(pos2d, 0, 1);
 }`;
-}
 
-function fsSource(gl: WebGL2RenderingContext) {
-    return `#version 300 es
+    static FS_SOURCE = `#version 300 es
 precision lowp float;
 uniform vec4 uColor;
 out vec4 outColor;
 void main() {
     outColor = uColor;
-}
-`;
-}
+}`;
 
-class LineChartWebGLProgram extends LinkedWebGLProgram {
     locations;
     constructor(gl: WebGL2RenderingContext, debug: boolean) {
-        super(gl, vsSource(gl), fsSource(gl), debug);
+        super(gl, LineProgram.VS_SOURCE, LineProgram.FS_SOURCE, debug);
         this.link();
 
         const getLoc = (name: string) => throwIfFalsy(gl.getUniformLocation(this.program, name));
 
         this.locations = {
             uDataPoints: getLoc('uDataPoints'),
+            uLineType: getLoc('uLineType'),
+            uStepLocation: getLoc('uStepLocation'),
             uModelScale: getLoc('uModelScale'),
             uModelTranslation: getLoc('uModelTranslation'),
             uProjectionScale: getLoc('uProjectionScale'),
@@ -73,11 +88,6 @@ class LineChartWebGLProgram extends LinkedWebGLProgram {
         gl.uniform1i(this.locations.uDataPoints, 0);
     }
 }
-
-const BUFFER_TEXTURE_WIDTH = 256;
-const BUFFER_TEXTURE_HEIGHT = 2048;
-const BUFFER_POINT_CAPACITY = BUFFER_TEXTURE_WIDTH * BUFFER_TEXTURE_HEIGHT;
-const BUFFER_INTERVAL_CAPACITY = BUFFER_POINT_CAPACITY - 2;
 
 class SeriesSegmentVertexArray {
     dataBuffer;
@@ -102,7 +112,10 @@ class SeriesSegmentVertexArray {
         const dps = this.dataPoints;
         let rowStart = Math.floor(bufferPos / BUFFER_TEXTURE_WIDTH);
         let rowEnd = Math.ceil((bufferPos + n) / BUFFER_TEXTURE_WIDTH);
-        if (rowEnd < BUFFER_TEXTURE_HEIGHT && start + n == dps.length && bufferPos + n == rowEnd * BUFFER_TEXTURE_WIDTH)
+        // Ensure we have some padding at both ends of data.
+        if (rowStart > 0 && start === 0 && bufferPos === rowStart * BUFFER_TEXTURE_WIDTH)
+            rowStart--;
+        if (rowEnd < BUFFER_TEXTURE_HEIGHT && start + n === dps.length && bufferPos + n === rowEnd * BUFFER_TEXTURE_WIDTH)
             rowEnd++;
 
         const buffer = new Float32Array((rowEnd - rowStart) * BUFFER_TEXTURE_WIDTH * 2);
@@ -124,7 +137,7 @@ class SeriesSegmentVertexArray {
     /**
      * @param renderInterval [start, end) interval of data points, start from 0
      */
-    draw(renderInterval: { start: number, end: number }) {
+    draw(renderInterval: { start: number, end: number }, type: LineType) {
         const first = Math.max(0, renderInterval.start);
         const last = Math.min(BUFFER_INTERVAL_CAPACITY, renderInterval.end)
         const count = last - first
@@ -132,7 +145,17 @@ class SeriesSegmentVertexArray {
         const gl = this.gl;
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, this.dataBuffer);
-        gl.drawArrays(gl.TRIANGLE_STRIP, first * 4, count * 4 + 2);
+        if (type === LineType.Line) {
+            gl.drawArrays(gl.TRIANGLE_STRIP, first * 4, count * 4 + (last !== renderInterval.end ? 2 : 0));
+        } else if (type === LineType.Step) {
+            let firstP = first * 4;
+            let countP = count * 4 + 2;
+            if (first === renderInterval.start) {
+                firstP -= 2;
+                countP += 2;
+            }
+            gl.drawArrays(gl.TRIANGLE_STRIP, firstP, countP);
+        }
     }
 }
 
@@ -142,7 +165,7 @@ class SeriesSegmentVertexArray {
 class SeriesVertexArray {
     private segments = [] as SeriesSegmentVertexArray[];
     // each segment has at least 2 points
-    private validStart = 0;  // start position of the first segment. [0, BUFFER_INTERVAL_CAPACITY)
+    private validStart = 0;  // start position of the first segment. (0, BUFFER_INTERVAL_CAPACITY]
     private validEnd = 0;    // end position of the last segment. [2, BUFFER_POINT_CAPACITY)
 
     constructor(
@@ -154,12 +177,14 @@ class SeriesVertexArray {
     private popFront() {
         this.validStart += this.series.data.poped_front;
 
-        while (this.validStart >= BUFFER_INTERVAL_CAPACITY) {
+        while (this.validStart > BUFFER_INTERVAL_CAPACITY) {
             const activeArray = this.segments[0];
             activeArray.delete();
             this.segments.shift();
             this.validStart -= BUFFER_INTERVAL_CAPACITY;
         }
+
+        this.segments[0].syncPoints(0, 0, this.validStart);
     }
     private popBack() {
         this.validEnd -= this.series.data.poped_back;
@@ -191,21 +216,16 @@ class SeriesVertexArray {
             newArray();
             this.validEnd = this.validStart = BUFFER_POINT_CAPACITY - 1;
         }
-        if (this.validStart === 0) {
-            newArray();
-            numDPtoAdd += BUFFER_POINT_CAPACITY - BUFFER_INTERVAL_CAPACITY;
-        }
 
         while (true) {
             const activeArray = this.segments[0];
             const n = Math.min(this.validStart, numDPtoAdd);
             activeArray.syncPoints(numDPtoAdd - n, n, this.validStart - n);
-            numDPtoAdd -= n;
+            numDPtoAdd -= this.validStart - (BUFFER_POINT_CAPACITY - BUFFER_INTERVAL_CAPACITY);
             this.validStart -= n;
-            if (numDPtoAdd <= 0)
+            if (this.validStart > 0)
                 break;
             newArray();
-            numDPtoAdd += BUFFER_POINT_CAPACITY - BUFFER_INTERVAL_CAPACITY;
         }
     }
 
@@ -219,8 +239,10 @@ class SeriesVertexArray {
             this.validEnd = 0;
         }
 
-        if (this.segments.length === 0)
+        if (this.segments.length === 0) {
             newArray();
+            this.validEnd = this.validStart = 1;
+        }
 
         while (true) {
             const activeArray = this.segments[this.segments.length - 1];
@@ -286,13 +308,13 @@ class SeriesVertexArray {
             this.segments[i].draw({
                 start: startInterval - arrOffset,
                 end: endInterval - arrOffset,
-            });
+            }, this.series.lineType);
         }
     }
 }
 
 export class LineChartRenderer {
-    private program = new LineChartWebGLProgram(this.gl, this.options.debugWebGL);
+    private program = new LineProgram(this.gl, this.options.debugWebGL);
     private arrays = new Map<TimeChartSeriesOptions, SeriesVertexArray>();
     private height = 0;
     private width = 0;
@@ -345,8 +367,11 @@ export class LineChartRenderer {
             const color = resolveColorRGBA(ds.color ?? this.options.color);
             gl.uniform4fv(this.program.locations.uColor, color);
 
+            gl.uniform1i(this.program.locations.uLineType, ds.lineType);
             const lineWidth = ds.lineWidth ?? this.options.lineWidth;
             gl.uniform1f(this.program.locations.uLineWidth, lineWidth / 2);
+            if (ds.lineType === LineType.Step)
+                gl.uniform1f(this.program.locations.uStepLocation, ds.stepLocation);
 
             const renderDomain = {
                 min: this.model.xScale.invert(this.options.renderPaddingLeft - lineWidth / 2),

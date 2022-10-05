@@ -86,12 +86,19 @@ export interface ResolvedOptions extends ResolvedCoreOptions {
     zoom: ResolvedZoomOptions;
 }
 
+export enum LineType {
+    Line,
+    Step,
+};
+
 export interface TimeChartSeriesOptions {
     data: DataPointsBuffer;
     lineWidth?: number;
     name: string;
     color?: ColorSpecifier;
     visible: boolean;
+    lineType: LineType;
+    stepLocation: number;
 }
 
 export function resolveColorRGBA(color: ColorSpecifier): [number, number, number, number] {

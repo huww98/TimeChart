@@ -7,219 +7,95 @@ import { LinkedWebGLProgram, throwIfFalsy } from './webGLUtils';
 import { DataPointsBuffer } from "../core/dataPointsBuffer";
 
 
-const enum VertexAttribLocations {
-    FLAGS = 0,
-    DATA_POINT0 = 1,
-    DATA_POINT1 = 2,
-    DATA_POINT2 = 3,
-}
-
-function vsSource(gl: WebGL2RenderingContext | WebGLRenderingContext) {
-    const body = `
+function vsSource(gl: WebGL2RenderingContext) {
+    return `#version 300 es
+uniform highp sampler2D uDataPoints;
 uniform vec2 uModelScale;
 uniform vec2 uModelTranslation;
 uniform vec2 uProjectionScale;
 uniform float uLineWidth;
 
-void main() {
-# if defined(WEBGL1)
-    int flags = int(aFlags);
-# else
-    int flags = aFlags;
-# endif
-    int side = flags & 1;
-    int i = (flags >> 1) & 1;
-    int di = (flags >> 2) & 1;
+const int TEX_WIDTH = ${BUFFER_TEXTURE_WIDTH};
+const int TEX_HEIGHT = ${BUFFER_TEXTURE_HEIGHT};
 
-    vec2 dp[3] = vec2[3](aDataPoint0, aDataPoint1, aDataPoint2);
-    vec2 dir = dp[di + 1] - dp[di];
+vec2 dataPoint(int index) {
+    int x = index % TEX_WIDTH;
+    int y = index / TEX_WIDTH;
+    return texelFetch(uDataPoints, ivec2(x, y), 0).xy;
+}
+
+void main() {
+    int side = gl_VertexID & 1;
+    int di = (gl_VertexID >> 1) & 1;
+    int index = gl_VertexID >> 2;
+
+    vec2 dp[2] = vec2[2](dataPoint(index), dataPoint(index + 1));
+    vec2 dir = dp[1] - dp[0];
     if (side == 1)
         dir *= -1.;
 
-    vec2 cssPose = uModelScale * (dp[i] + uModelTranslation);
+    vec2 cssPose = uModelScale * (dp[di] + uModelTranslation);
     dir = normalize(uModelScale * dir);
     vec2 pos2d = uProjectionScale * (cssPose + vec2(-dir.y, dir.x) * uLineWidth);
     gl_Position = vec4(pos2d, 0, 1);
 }`;
-
-    if (gl instanceof WebGL2RenderingContext) {
-        return `#version 300 es
-layout (location = ${VertexAttribLocations.FLAGS}) in lowp int aFlags;
-layout (location = ${VertexAttribLocations.DATA_POINT0}) in highp vec2 aDataPoint0;
-layout (location = ${VertexAttribLocations.DATA_POINT1}) in highp vec2 aDataPoint1;
-layout (location = ${VertexAttribLocations.DATA_POINT2}) in highp vec2 aDataPoint2;
-${body}`;
-    } else {
-        return `
-# define WEBGL1
-attribute lowp float aFlags;
-attribute highp vec2 aDataPoints0;
-attribute highp vec2 aDataPoints1;
-attribute highp vec2 aDataPoints2;
-${body}`;
-    }
 }
 
-function fsSource(gl: WebGL2RenderingContext | WebGLRenderingContext) {
-    const body = `
-`;
-    if (gl instanceof WebGL2RenderingContext) {
-        return `#version 300 es
+function fsSource(gl: WebGL2RenderingContext) {
+    return `#version 300 es
 precision lowp float;
 uniform vec4 uColor;
 out vec4 outColor;
 void main() {
     outColor = uColor;
-}`;
-    } else {
-        return `
-precision lowp float;
-uniform vec4 uColor;
-void main() {
-    gl_FragColor = uColor;
-}`;
-    }
+}
+`;
 }
 
 class LineChartWebGLProgram extends LinkedWebGLProgram {
-    locations: {
-        uModelScale: WebGLUniformLocation;
-        uModelTranslation: WebGLUniformLocation;
-        uProjectionScale: WebGLUniformLocation;
-        uLineWidth: WebGLUniformLocation;
-        uColor: WebGLUniformLocation;
-    };
-    constructor(gl: WebGL2RenderingContext | WebGLRenderingContext, debug: boolean) {
+    locations;
+    constructor(gl: WebGL2RenderingContext, debug: boolean) {
         super(gl, vsSource(gl), fsSource(gl), debug);
-
-        if (gl instanceof WebGLRenderingContext) {
-            gl.bindAttribLocation(this.program, VertexAttribLocations.FLAGS, 'aFlags');
-            gl.bindAttribLocation(this.program, VertexAttribLocations.DATA_POINT0, 'aDataPoint0');
-            gl.bindAttribLocation(this.program, VertexAttribLocations.DATA_POINT1, 'aDataPoint1');
-            gl.bindAttribLocation(this.program, VertexAttribLocations.DATA_POINT2, 'aDataPoint2');
-        }
-
         this.link();
 
         const getLoc = (name: string) => throwIfFalsy(gl.getUniformLocation(this.program, name));
 
         this.locations = {
+            uDataPoints: getLoc('uDataPoints'),
             uModelScale: getLoc('uModelScale'),
             uModelTranslation: getLoc('uModelTranslation'),
             uProjectionScale: getLoc('uProjectionScale'),
             uLineWidth: getLoc('uLineWidth'),
             uColor: getLoc('uColor'),
         }
+
+        this.use();
+        gl.uniform1i(this.locations.uDataPoints, 0);
     }
 }
 
-const INDEX_PER_DATAPOINT = 2;
-const BYTES_PER_DATAPOINT = INDEX_PER_DATAPOINT * Float32Array.BYTES_PER_ELEMENT;
-const BUFFER_INTERVAL_CAPACITY = 512 * 1024;
-const BUFFER_POINT_CAPACITY = BUFFER_INTERVAL_CAPACITY + 2;
-const BUFFER_CAPACITY = BUFFER_POINT_CAPACITY * INDEX_PER_DATAPOINT;
-
-interface IVAO {
-    bind(): void;
-    clear(): void;
-}
-
-class WebGL2VAO implements IVAO {
-    private vao: WebGLVertexArrayObject;
-    constructor(private gl: WebGL2RenderingContext) {
-        this.vao = throwIfFalsy(gl.createVertexArray());
-        this.bind();
-    }
-    bind() {
-        this.gl.bindVertexArray(this.vao);
-    }
-    clear() {
-        this.gl.deleteVertexArray(this.vao);
-    }
-}
-
-class OESVAO implements IVAO {
-    vao: WebGLVertexArrayObjectOES;
-    constructor(private vaoExt: OES_vertex_array_object) {
-        this.vao = throwIfFalsy(vaoExt.createVertexArrayOES());
-        this.bind();
-    }
-    bind() {
-        this.vaoExt.bindVertexArrayOES(this.vao);
-    }
-    clear() {
-        this.vaoExt.deleteVertexArrayOES(this.vao);
-    }
-}
-
-class WebGL1BufferInfo implements IVAO {
-    constructor(private bindFunc: () => void) {
-    }
-    bind() {
-        this.bindFunc();
-    }
-    clear() {
-    }
-}
+const BUFFER_TEXTURE_WIDTH = 256;
+const BUFFER_TEXTURE_HEIGHT = 2048;
+const BUFFER_POINT_CAPACITY = BUFFER_TEXTURE_WIDTH * BUFFER_TEXTURE_HEIGHT;
+const BUFFER_INTERVAL_CAPACITY = BUFFER_POINT_CAPACITY - 2;
 
 class SeriesSegmentVertexArray {
-    vao: IVAO;
-    dataBuffer: WebGLBuffer;
-    validStart = 0;
-    validEnd = 0;
-    lastDrawStart = -1;
+    dataBuffer;
 
     constructor(
-        private gl: WebGL2RenderingContext | WebGLRenderingContext,
+        private gl: WebGL2RenderingContext,
         private dataPoints: DataPointsBuffer,
-        globalInit: () => void,
     ) {
-        this.dataBuffer = throwIfFalsy(gl.createBuffer());
-        const bindFunc = () => {
-            globalInit();
-
-            gl.bindBuffer(gl.ARRAY_BUFFER, this.dataBuffer);
-
-            gl.enableVertexAttribArray(VertexAttribLocations.DATA_POINT0);
-            gl.enableVertexAttribArray(VertexAttribLocations.DATA_POINT1);
-            gl.enableVertexAttribArray(VertexAttribLocations.DATA_POINT2);
-            if (gl instanceof WebGL2RenderingContext) {
-                gl.vertexAttribDivisor(VertexAttribLocations.DATA_POINT0, 1);
-                gl.vertexAttribDivisor(VertexAttribLocations.DATA_POINT1, 1);
-                gl.vertexAttribDivisor(VertexAttribLocations.DATA_POINT2, 1);
-            } else {
-                const ext = gl.getExtension('ANGLE_instanced_arrays');
-                if (!ext) {
-                    throw new Error('ANGLE_instanced_arrays not supported');
-                }
-                ext.vertexAttribDivisorANGLE(VertexAttribLocations.DATA_POINT0, 1);
-                ext.vertexAttribDivisorANGLE(VertexAttribLocations.DATA_POINT1, 1);
-                ext.vertexAttribDivisorANGLE(VertexAttribLocations.DATA_POINT2, 1);
-            }
-        }
-        if (gl instanceof WebGLRenderingContext) {
-            const vaoExt = gl.getExtension('OES_vertex_array_object');
-            if (vaoExt) {
-                this.vao = new OESVAO(vaoExt);
-            } else {
-                this.vao = new WebGL1BufferInfo(bindFunc);
-            }
-        } else {
-            this.vao = new WebGL2VAO(gl);
-        }
-        bindFunc();
-
-        gl.bufferData(gl.ARRAY_BUFFER, BUFFER_CAPACITY * Float32Array.BYTES_PER_ELEMENT, gl.DYNAMIC_DRAW);
-    }
-
-    clear() {
-        this.validStart = this.validEnd = 0;
+        this.dataBuffer = throwIfFalsy(gl.createTexture());
+        gl.bindTexture(gl.TEXTURE_2D, this.dataBuffer);
+        gl.texStorage2D(gl.TEXTURE_2D, 1, gl.RG32F, BUFFER_TEXTURE_WIDTH, BUFFER_TEXTURE_HEIGHT);
+        gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, BUFFER_TEXTURE_WIDTH, BUFFER_TEXTURE_HEIGHT, gl.RG, gl.FLOAT, new Float32Array(BUFFER_TEXTURE_WIDTH * BUFFER_TEXTURE_HEIGHT * 2));
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
     }
 
     delete() {
-        this.clear();
-        this.gl.deleteBuffer(this.dataBuffer);
-        this.vao.clear();
+        this.gl.deleteTexture(this.dataBuffer);
     }
 
     /** pop 0 means just remove the overflow
@@ -238,44 +114,27 @@ class SeriesSegmentVertexArray {
         return newVaildStartDP - Math.floor(this.validEnd / POINT_PER_DATAPOINT);
     }
 
-    private syncPoints(start: number, n: number, bufferPos: number) {
+    syncPoints(start: number, n: number, bufferPos: number) {
         const dps = this.dataPoints;
-        const posVaild = (pos: number) => pos >= this.validStart && pos < this.validEnd;
-        const repeatTail = bufferPos + n < BUFFER_POINT_CAPACITY && !posVaild(bufferPos + n)
-        let nUpload = n + (repeatTail ? 1 : 0);
+        let rowStart = Math.floor(bufferPos / BUFFER_TEXTURE_WIDTH);
+        let rowEnd = Math.ceil(bufferPos + n / BUFFER_TEXTURE_WIDTH);
+        if (start + n == dps.length && bufferPos + n == rowEnd * BUFFER_TEXTURE_WIDTH)
+            rowEnd++;
 
-        const buffer = new Float32Array(nUpload * INDEX_PER_DATAPOINT);
-        let bi = 0;
-
-        function put(dp: DataPoint) {
-            buffer[bi] = dp.x;
-            buffer[bi + 1] = dp.y;
-            bi += 2;
+        const buffer = new Float32Array((rowEnd - rowStart) * BUFFER_TEXTURE_WIDTH * 2);
+        for (let r = rowStart; r < rowEnd; r++) {
+            for (let c = 0; c < BUFFER_TEXTURE_WIDTH; c++) {
+                const p = r * BUFFER_TEXTURE_WIDTH + c;
+                const i = Math.max(Math.min(start + p - bufferPos, dps.length - 1), 0);
+                const dp = dps[i];
+                const bufferIdx = ((r - rowStart) * BUFFER_TEXTURE_WIDTH + c) * 2;
+                buffer[bufferIdx] = dp.x;
+                buffer[bufferIdx + 1] = dp.y;
+            }
         }
-
-        for (let i = 0; i < n; i++)
-            put(dps[start + i]);
-        if (repeatTail)
-            put(dps[start + n - 1]);
-
-        if (bi !== buffer.length)
-            throw Error('BUG!')
-
         const gl = this.gl;
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.dataBuffer);
-        gl.bufferSubData(gl.ARRAY_BUFFER, BYTES_PER_DATAPOINT * bufferPos, buffer);
-
-        this.validStart = Math.min(this.validStart, bufferPos);
-        this.validEnd = Math.max(this.validEnd, bufferPos + n);
-    }
-
-    /**
-     * @returns Number of datapoints remaining to be added to other segments.
-     */
-    pushBack(n: number): number {
-        const numDPToAdd = Math.min(n, BUFFER_POINT_CAPACITY - this.validEnd);
-        this.syncPoints(this.dataPoints.length - n, numDPToAdd, this.validEnd);
-        return n - Math.max(0, BUFFER_INTERVAL_CAPACITY - (this.validEnd - numDPToAdd));
+        gl.bindTexture(gl.TEXTURE_2D, this.dataBuffer);
+        gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, rowStart, BUFFER_TEXTURE_WIDTH, rowEnd - rowStart, gl.RG, gl.FLOAT, buffer);
     }
 
     pushFront(n: number): number {
@@ -299,21 +158,9 @@ class SeriesSegmentVertexArray {
         const count = last - first
 
         const gl = this.gl;
-        this.vao.bind();
-
-        if (this.lastDrawStart !== first) {
-            gl.bindBuffer(gl.ARRAY_BUFFER, this.dataBuffer);
-            for (let i = 0; i < 3; i++) {
-                gl.vertexAttribPointer(VertexAttribLocations.DATA_POINT0 + i, 2, gl.FLOAT, false, BYTES_PER_DATAPOINT, (first + i) * BYTES_PER_DATAPOINT);
-            }
-            this.lastDrawStart = first;
-        }
-        if (gl instanceof WebGL2RenderingContext) {
-            gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 6, count);
-        } else {
-            const ext = gl.getExtension('ANGLE_instanced_arrays');
-            ext!.drawArraysInstancedANGLE(gl.TRIANGLE_STRIP, 0, 6, count);
-        }
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, this.dataBuffer);
+        gl.drawArrays(gl.TRIANGLE_STRIP, first * 4, count * 4 + 2);
         return count;
     }
 }
@@ -323,14 +170,13 @@ class SeriesSegmentVertexArray {
  */
 class SeriesVertexArray {
     private vertexArrays = [] as SeriesSegmentVertexArray[];
-    private readonly flagsBuffer: WebGLBuffer;
+    private validStart = 0;
+    private validEnd = 0;
+
     constructor(
-        private gl: WebGL2RenderingContext | WebGLRenderingContext,
+        private gl: WebGL2RenderingContext,
         private series: TimeChartSeriesOptions,
     ) {
-        this.flagsBuffer = throwIfFalsy(gl.createBuffer());
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.flagsBuffer);
-        gl.bufferData(gl.ARRAY_BUFFER, new Int8Array([0b000, 0b001, 0b010, 0b011, 0b110, 0b111]), gl.STATIC_DRAW);
     }
 
     private popFront() {
@@ -363,16 +209,7 @@ class SeriesVertexArray {
     }
 
     private newArray() {
-        const globalInit = () => {
-            const gl = this.gl;
-            gl.bindBuffer(gl.ARRAY_BUFFER, this.flagsBuffer);
-            gl.enableVertexAttribArray(VertexAttribLocations.FLAGS);
-            if (gl instanceof WebGL2RenderingContext)
-                gl.vertexAttribIPointer(VertexAttribLocations.FLAGS, 1, gl.BYTE, 1, 0);
-            else
-                gl.vertexAttribPointer(VertexAttribLocations.FLAGS, 1, gl.BYTE, false, 1, 0);
-        };
-        return new SeriesSegmentVertexArray(this.gl, this.series.data, globalInit);
+        return new SeriesSegmentVertexArray(this.gl, this.series.data);
     }
     private pushFront() {
         let numDPtoAdd = this.series.data.pushed_front;
@@ -413,6 +250,7 @@ class SeriesVertexArray {
         const newArray = () => {
             activeArray = this.newArray();
             this.vertexArrays.push(activeArray);
+            this.validEnd = 0;
         }
 
         if (this.vertexArrays.length === 0)
@@ -420,8 +258,14 @@ class SeriesVertexArray {
         activeArray = this.vertexArrays[this.vertexArrays.length - 1];
 
         while (true) {
-            numDPtoAdd = activeArray.pushBack(numDPtoAdd);
-            if (numDPtoAdd <= 0)
+            const n = Math.min(BUFFER_POINT_CAPACITY - this.validEnd, numDPtoAdd);
+            activeArray.syncPoints(this.series.data.length - numDPtoAdd, n, this.validEnd);
+            // Note that each segment overlaps with the previous one.
+            // numDPtoAdd can increase here, indicating the overlapping part should be synced again to the next segment
+            numDPtoAdd -= BUFFER_INTERVAL_CAPACITY - this.validEnd;
+            this.validEnd += n;
+            // Fully fill the previous segment before creating a new one
+            if (this.validEnd < BUFFER_POINT_CAPACITY)
                 break;
             newArray();
         }
@@ -439,7 +283,7 @@ class SeriesVertexArray {
         if (this.vertexArrays.length === 0 || data[0].x > renderDomain.max || data[data.length - 1].x < renderDomain.min)
             return;
 
-        let offset = this.vertexArrays[0].validStart - 1;
+        let offset = this.validStart - 1;
         const key = (d: DataPoint) => d.x
         const startInterval = domainSearch(data, 1, data.length, renderDomain.min, key) + offset;
         const endInterval = domainSearch(data, startInterval, data.length - 1, renderDomain.max, key) + 1 + offset;
@@ -466,7 +310,7 @@ export class LineChartRenderer {
 
     constructor(
         private model: RenderModel,
-        private gl: WebGL2RenderingContext | WebGLRenderingContext,
+        private gl: WebGL2RenderingContext,
         private options: ResolvedCoreOptions,
     ) {
         this.program.use();

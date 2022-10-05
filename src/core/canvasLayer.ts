@@ -1,23 +1,17 @@
 import { resolveColorRGBA, ResolvedCoreOptions } from '../options';
 import { RenderModel } from './renderModel';
 
-function getContext(canvas: HTMLCanvasElement, forceWebGL1: boolean) {
-    if (!forceWebGL1) {
-        const ctx = canvas.getContext('webgl2');
-        if (ctx) {
-            return ctx;
-        }
+function getContext(canvas: HTMLCanvasElement) {
+    const ctx = canvas.getContext('webgl2');
+    if (!ctx) {
+        throw new Error('Unable to initialize WebGL2. Your browser or machine may not support it.');
     }
-    const ctx = canvas.getContext('webgl');
-    if (ctx) {
-        return ctx;
-    }
-    throw new Error('Unable to initialize WebGL. Your browser or machine may not support it.');
+    return ctx;
 }
 
 export class CanvasLayer {
     canvas: HTMLCanvasElement
-    gl: WebGL2RenderingContext | WebGLRenderingContext;
+    gl: WebGL2RenderingContext;
 
     constructor(el: HTMLElement, private options: ResolvedCoreOptions, model: RenderModel) {
         const canvas = document.createElement('canvas');
@@ -27,7 +21,7 @@ export class CanvasLayer {
         style.left = style.right = style.top = style.bottom = '0';
         el.shadowRoot!.appendChild(canvas);
 
-        this.gl = getContext(canvas, options.forceWebGL1);
+        this.gl = getContext(canvas);
 
         const bgColor = resolveColorRGBA(options.backgroundColor);
         this.gl.clearColor(...bgColor);

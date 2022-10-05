@@ -64,7 +64,6 @@ interface TimeChartRenderOptions {
     xScaleType: () => ScaleBase;
 
     debugWebGL: boolean;
-    forceWebGL1: boolean;
 }
 
 export type TimeChartPlugins = Readonly<Record<string, TimeChartPlugin>>;

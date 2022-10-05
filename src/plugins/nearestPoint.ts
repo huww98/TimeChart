@@ -44,13 +44,13 @@ export class NearestPoint {
         for (const s of this.options.series) {
             if (!this.intersectPoints.has(s)) {
                 const intersect = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                intersect.style.stroke = (s.color ?? this.options.color).toString();
-                intersect.style.strokeWidth = `${s.lineWidth ?? this.options.lineWidth}px`;
                 intersect.transform.baseVal.initialize(initTrans);
                 this.container.appendChild(intersect);
                 this.intersectPoints.set(s, intersect);
             }
             const intersect = this.intersectPoints.get(s)!;
+            intersect.style.stroke = (s.color ?? this.options.color).toString();
+            intersect.style.strokeWidth = `${s.lineWidth ?? this.options.lineWidth}px`;
             const point = this.pModel.dataPoints.get(s);
             if (!point) {
                 intersect.style.visibility = 'hidden';

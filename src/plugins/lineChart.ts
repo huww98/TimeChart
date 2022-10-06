@@ -201,6 +201,9 @@ class SeriesVertexArray {
     }
 
     private popFront() {
+        if (this.series.data.poped_front === 0)
+            return;
+
         this.validStart += this.series.data.poped_front;
 
         while (this.validStart > BUFFER_INTERVAL_CAPACITY) {
@@ -213,6 +216,9 @@ class SeriesVertexArray {
         this.segments[0].syncPoints(0, 0, this.validStart);
     }
     private popBack() {
+        if (this.series.data.poped_back === 0)
+            return;
+
         this.validEnd -= this.series.data.poped_back;
 
         while (this.validEnd < BUFFER_POINT_CAPACITY - BUFFER_INTERVAL_CAPACITY) {
@@ -289,7 +295,6 @@ class SeriesVertexArray {
         for (const s of this.segments)
             s.delete();
         this.segments = [];
-        this.validStart = this.validEnd = 0;
     }
 
     syncBuffer() {

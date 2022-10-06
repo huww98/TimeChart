@@ -12,12 +12,39 @@ const BUFFER_TEXTURE_HEIGHT = 2048;
 const BUFFER_POINT_CAPACITY = BUFFER_TEXTURE_WIDTH * BUFFER_TEXTURE_HEIGHT;
 const BUFFER_INTERVAL_CAPACITY = BUFFER_POINT_CAPACITY - 2;
 
+class ShaderUniformData {
+    data = new ArrayBuffer(3 * 2 * 4);
+    ubo;
+
+    constructor(private gl: WebGL2RenderingContext) {
+        this.ubo = throwIfFalsy(gl.createBuffer());
+        gl.bindBuffer(gl.UNIFORM_BUFFER, this.ubo);
+        gl.bufferData(gl.UNIFORM_BUFFER, this.data, gl.DYNAMIC_DRAW);
+    }
+    get modelScale() {
+        return new Float32Array(this.data, 0, 2);
+    }
+    get modelTranslate() {
+        return new Float32Array(this.data, 2 * 4, 2);
+    }
+    get projectionScale() {
+        return new Float32Array(this.data, 4 * 4, 2);
+    }
+
+    upload(index = 0) {
+        this.gl.bindBufferBase(this.gl.UNIFORM_BUFFER, index, this.ubo);
+        this.gl.bufferSubData(this.gl.UNIFORM_BUFFER, 0, this.data);
+    }
+}
+
 class LineProgram extends LinkedWebGLProgram {
     static VS_SOURCE = `#version 300 es
+layout (std140) uniform proj {
+    vec2 modelScale;
+    vec2 modelTranslate;
+    vec2 projectionScale;
+};
 uniform highp sampler2D uDataPoints;
-uniform vec2 uModelScale;
-uniform vec2 uModelTranslation;
-uniform vec2 uProjectionScale;
 uniform float uLineWidth;
 uniform int uLineType;
 uniform float uStepLocation;
@@ -43,7 +70,7 @@ void main() {
     if (uLineType == ${LineType.Line}) {
         base = dp[di];
         vec2 dir = dp[1] - dp[0];
-        dir = normalize(uModelScale * dir);
+        dir = normalize(modelScale * dir);
         off = vec2(-dir.y, dir.x) * uLineWidth;
     } else if (uLineType == ${LineType.Step}) {
         base = vec2(dp[0].x * (1. - uStepLocation) + dp[1].x * uStepLocation, dp[di].y);
@@ -53,8 +80,8 @@ void main() {
 
     if (side == 1)
         off = -off;
-    vec2 cssPose = uModelScale * (base + uModelTranslation);
-    vec2 pos2d = uProjectionScale * (cssPose + off);
+    vec2 cssPose = modelScale * (base + modelTranslate);
+    vec2 pos2d = projectionScale * (cssPose + off);
     gl_Position = vec4(pos2d, 0, 1);
 }`;
 
@@ -77,15 +104,14 @@ void main() {
             uDataPoints: getLoc('uDataPoints'),
             uLineType: getLoc('uLineType'),
             uStepLocation: getLoc('uStepLocation'),
-            uModelScale: getLoc('uModelScale'),
-            uModelTranslation: getLoc('uModelTranslation'),
-            uProjectionScale: getLoc('uProjectionScale'),
             uLineWidth: getLoc('uLineWidth'),
             uColor: getLoc('uColor'),
         }
 
         this.use();
         gl.uniform1i(this.locations.uDataPoints, 0);
+        const projIdx = gl.getUniformBlockIndex(this.program, 'proj');
+        gl.uniformBlockBinding(this.program, projIdx, 0);
     }
 }
 
@@ -315,6 +341,7 @@ class SeriesVertexArray {
 
 export class LineChartRenderer {
     private program = new LineProgram(this.gl, this.options.debugWebGL);
+    private uniformBuffer;
     private arrays = new Map<TimeChartSeriesOptions, SeriesVertexArray>();
     private height = 0;
     private width = 0;
@@ -327,6 +354,8 @@ export class LineChartRenderer {
         private options: ResolvedCoreOptions,
     ) {
         this.program.use();
+        this.uniformBuffer = new ShaderUniformData(this.gl);
+
         model.updated.on(() => this.drawFrame());
         model.resized.on((w, h) => this.onResize(w, h));
     }
@@ -348,7 +377,7 @@ export class LineChartRenderer {
 
         const scale = vec2.fromValues(this.renderWidth, this.renderHeight)
         vec2.divide(scale, [2., 2.], scale)
-        this.gl.uniform2fv(this.program.locations.uProjectionScale, scale);
+        this.uniformBuffer.projectionScale.set(scale);
     }
 
     onResize(width: number, height: number) {
@@ -359,6 +388,7 @@ export class LineChartRenderer {
     drawFrame() {
         this.syncBuffer();
         this.syncDomain();
+        this.uniformBuffer.upload();
         const gl = this.gl;
         for (const [ds, arr] of this.arrays) {
             if (!ds.visible) {
@@ -411,8 +441,8 @@ export class LineChartRenderer {
             -(yRange[0] - this.renderHeight / 2 - this.options.renderPaddingTop) / s[1] - yDomain[0],
         ];
 
-        gl.uniform2fv(this.program.locations.uModelScale, s);
-        gl.uniform2fv(this.program.locations.uModelTranslation, t);
+        this.uniformBuffer.modelScale.set(s);
+        this.uniformBuffer.modelTranslate.set(t);
     }
 }
 

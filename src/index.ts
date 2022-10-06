@@ -1,5 +1,5 @@
 import core from './core';
-import { NoPlugin, ResolvedOptions, TimeChartOptions, TimeChartPlugins } from './options';
+import { LineType, NoPlugin, ResolvedOptions, TimeChartOptions, TimeChartPlugins } from './options';
 import { TimeChartZoomPlugin } from './plugins/chartZoom';
 import { crosshair } from './plugins/crosshair';
 import { d3Axis } from './plugins/d3Axis';
@@ -47,6 +47,7 @@ export default class TimeChart<TPlugins extends TimeChartPlugins=NoPlugin> exten
         TimeChartZoomPlugin,
         tooltip
     }
+    static LineType = LineType;
 
     get options(): ResolvedOptions { return this._options as ResolvedOptions; }
 

@@ -262,6 +262,20 @@ const chart = new TimeChart(el, {
 
   default: undefined
 
+* lineType (number): Take one of the following:
+  * LineType.Line: straight lines connecting data points
+  * LineType.Step: step function, only horizontal and vertical lines
+  * LineType.NativeLine: like LineType.Line, but use native WebGL line drawing capability.
+    This is faster than LineType.Line, but the line width is fixed at 1 pixel on most devices.
+  * LineType.NativePoint: draw points at each data point using native WebGL point drawing capability.
+    lineWidth is reused to specify point size in this case.
+
+  default: LineType.Line
+
+* stepLocation (number): Only effective if `lineType === LineType.Step`. Where to draw the vertical line. Specified as a ratio of the distance between two adjacent data points. Usually in the range of [0, 1].
+
+  default: 0.5
+
 * name (string): The name of the series. Will be shown in legend and tooltips.
 
   default: ''

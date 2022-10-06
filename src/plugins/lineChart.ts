@@ -37,15 +37,13 @@ class ShaderUniformData {
     }
 }
 
-class LineProgram extends LinkedWebGLProgram {
-    static VS_SOURCE = `#version 300 es
+const VS_HEADER = `#version 300 es
 layout (std140) uniform proj {
     vec2 modelScale;
     vec2 modelTranslate;
     vec2 projectionScale;
 };
 uniform highp sampler2D uDataPoints;
-uniform float uLineWidth;
 uniform int uLineType;
 uniform float uStepLocation;
 
@@ -57,6 +55,48 @@ vec2 dataPoint(int index) {
     int y = index / TEX_WIDTH;
     return texelFetch(uDataPoints, ivec2(x, y), 0).xy;
 }
+`
+
+const LINE_FS_SOURCE = `#version 300 es
+precision lowp float;
+uniform vec4 uColor;
+out vec4 outColor;
+void main() {
+    outColor = uColor;
+}`;
+
+class NativeLineProgram extends LinkedWebGLProgram {
+    locations;
+    static VS_SOURCE = `${VS_HEADER}
+uniform float uPointSize;
+
+void main() {
+    vec2 pos2d = projectionScale * modelScale * (dataPoint(gl_VertexID) + modelTranslate);
+    gl_Position = vec4(pos2d, 0, 1);
+    gl_PointSize = uPointSize;
+}
+`
+
+    constructor(gl: WebGL2RenderingContext, debug: boolean) {
+        super(gl, NativeLineProgram.VS_SOURCE, LINE_FS_SOURCE, debug);
+        this.link();
+
+        this.locations = {
+            uDataPoints: this.getUniformLocation('uDataPoints'),
+            uPointSize: this.getUniformLocation('uPointSize'),
+            uColor: this.getUniformLocation('uColor'),
+        }
+
+        this.use();
+        gl.uniform1i(this.locations.uDataPoints, 0);
+        const projIdx = gl.getUniformBlockIndex(this.program, 'proj');
+        gl.uniformBlockBinding(this.program, projIdx, 0);
+    }
+}
+
+class LineProgram extends LinkedWebGLProgram {
+    static VS_SOURCE = `${VS_HEADER}
+uniform float uLineWidth;
 
 void main() {
     int side = gl_VertexID & 1;
@@ -85,27 +125,17 @@ void main() {
     gl_Position = vec4(pos2d, 0, 1);
 }`;
 
-    static FS_SOURCE = `#version 300 es
-precision lowp float;
-uniform vec4 uColor;
-out vec4 outColor;
-void main() {
-    outColor = uColor;
-}`;
-
     locations;
     constructor(gl: WebGL2RenderingContext, debug: boolean) {
-        super(gl, LineProgram.VS_SOURCE, LineProgram.FS_SOURCE, debug);
+        super(gl, LineProgram.VS_SOURCE, LINE_FS_SOURCE, debug);
         this.link();
 
-        const getLoc = (name: string) => throwIfFalsy(gl.getUniformLocation(this.program, name));
-
         this.locations = {
-            uDataPoints: getLoc('uDataPoints'),
-            uLineType: getLoc('uLineType'),
-            uStepLocation: getLoc('uStepLocation'),
-            uLineWidth: getLoc('uLineWidth'),
-            uColor: getLoc('uColor'),
+            uDataPoints: this.getUniformLocation('uDataPoints'),
+            uLineType: this.getUniformLocation('uLineType'),
+            uStepLocation: this.getUniformLocation('uStepLocation'),
+            uLineWidth: this.getUniformLocation('uLineWidth'),
+            uColor: this.getUniformLocation('uColor'),
         }
 
         this.use();
@@ -181,6 +211,10 @@ class SeriesSegmentVertexArray {
                 countP += 2;
             }
             gl.drawArrays(gl.TRIANGLE_STRIP, firstP, countP);
+        } else if (type === LineType.NativeLine) {
+            gl.drawArrays(gl.LINE_STRIP, first, count + 1);
+        } else if (type === LineType.NativePoint) {
+            gl.drawArrays(gl.POINTS, first, count + 1);
         }
     }
 }
@@ -345,7 +379,8 @@ class SeriesVertexArray {
 }
 
 export class LineChartRenderer {
-    private program = new LineProgram(this.gl, this.options.debugWebGL);
+    private lineProgram = new LineProgram(this.gl, this.options.debugWebGL);
+    private nativeLineProgram = new NativeLineProgram(this.gl, this.options.debugWebGL);
     private uniformBuffer;
     private arrays = new Map<TimeChartSeriesOptions, SeriesVertexArray>();
     private height = 0;
@@ -358,7 +393,6 @@ export class LineChartRenderer {
         private gl: WebGL2RenderingContext,
         private options: ResolvedCoreOptions,
     ) {
-        this.program.use();
         this.uniformBuffer = new ShaderUniformData(this.gl);
 
         model.updated.on(() => this.drawFrame());
@@ -399,14 +433,24 @@ export class LineChartRenderer {
             if (!ds.visible) {
                 continue;
             }
-            const color = resolveColorRGBA(ds.color ?? this.options.color);
-            gl.uniform4fv(this.program.locations.uColor, color);
 
-            gl.uniform1i(this.program.locations.uLineType, ds.lineType);
+            const prog = ds.lineType === LineType.NativeLine || ds.lineType === LineType.NativePoint ? this.nativeLineProgram : this.lineProgram;
+            prog.use();
+            const color = resolveColorRGBA(ds.color ?? this.options.color);
+            gl.uniform4fv(prog.locations.uColor, color);
+
             const lineWidth = ds.lineWidth ?? this.options.lineWidth;
-            gl.uniform1f(this.program.locations.uLineWidth, lineWidth / 2);
-            if (ds.lineType === LineType.Step)
-                gl.uniform1f(this.program.locations.uStepLocation, ds.stepLocation);
+            if (prog instanceof LineProgram) {
+                gl.uniform1i(prog.locations.uLineType, ds.lineType);
+                gl.uniform1f(prog.locations.uLineWidth, lineWidth / 2);
+                if (ds.lineType === LineType.Step)
+                    gl.uniform1f(prog.locations.uStepLocation, ds.stepLocation);
+            } else {
+                if (ds.lineType === LineType.NativeLine)
+                    gl.lineWidth(lineWidth * this.options.pixelRatio);  // Not working on most platforms
+                else if (ds.lineType === LineType.NativePoint)
+                    gl.uniform1f(prog.locations.uPointSize, lineWidth * this.options.pixelRatio);
+            }
 
             const renderDomain = {
                 min: this.model.xScale.invert(this.options.renderPaddingLeft - lineWidth / 2),
@@ -425,7 +469,6 @@ export class LineChartRenderer {
     syncDomain() {
         this.syncViewport();
         const m = this.model;
-        const gl = this.gl;
 
         // for any x,
         // (x - domain[0]) / (domain[1] - domain[0]) * (range[1] - range[0]) + range[0] - W / 2 - padding = s * (x + t)

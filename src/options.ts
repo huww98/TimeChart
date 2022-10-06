@@ -89,6 +89,8 @@ export interface ResolvedOptions extends ResolvedCoreOptions {
 export enum LineType {
     Line,
     Step,
+    NativeLine,
+    NativePoint,
 };
 
 export interface TimeChartSeriesOptions {

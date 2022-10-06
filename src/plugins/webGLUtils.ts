@@ -26,6 +26,10 @@ export class LinkedWebGLProgram {
         }
     }
 
+    getUniformLocation(name: string) {
+        return throwIfFalsy(this.gl.getUniformLocation(this.program, name));
+    }
+
     public use() {
         this.gl.useProgram(this.program);
     }

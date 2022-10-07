@@ -1,7 +1,6 @@
-import { NearestPointModel } from "../core/nearestPoint";
-import { ResolvedCoreOptions, TimeChartSeriesOptions } from "../options";
-import { RenderModel } from "../core/renderModel";
+import { TimeChartSeriesOptions, TooltipOptions } from "../options";
 import { TimeChartPlugin } from ".";
+import core from "../core";
 
 type ItemElements = { item: HTMLElement; example: HTMLElement; name: HTMLElement, value: HTMLElement }
 
@@ -12,8 +11,11 @@ export class Tooltip {
     items = new Map<TimeChartSeriesOptions, ItemElements>();
     itemContainer: HTMLElement;
 
-    constructor(private el: HTMLElement, private model: RenderModel, private options: ResolvedCoreOptions,
-        private nearestPoint: NearestPointModel) {
+    chartOptions;
+
+    constructor(chart: core, public readonly options: TooltipOptions) {
+        this.chartOptions = chart.options;
+
         const mouseOffset = 12;
 
         this.tooltip = document.createElement('chart-tooltip');
@@ -66,30 +68,30 @@ td {
 
         const table = document.createElement("table");
 
-        this.xItem = this.createItemElements(this.options.tooltipXLabel);
+        this.xItem = this.createItemElements(this.options.xLabel);
         table.appendChild(this.xItem.item);
 
         legendRoot.appendChild(table);
 
         this.itemContainer = table;
         this.update();
-        el.shadowRoot!.appendChild(this.tooltip);
+        chart.el.shadowRoot!.appendChild(this.tooltip);
 
-        model.updated.on(() => this.update());
+        chart.model.updated.on(() => this.update());
 
-        model.disposing.on(() => {
-            el.shadowRoot!.removeChild(this.tooltip);
+        chart.model.disposing.on(() => {
+            chart.el.shadowRoot!.removeChild(this.tooltip);
         })
 
-        nearestPoint.updated.on(() => {
-            if (!options.tooltip || nearestPoint.dataPoints.size == 0) {
+        chart.nearestPoint.updated.on(() => {
+            if (!options.enabled || chart.nearestPoint.dataPoints.size == 0) {
                 ls.visibility = "hidden";
                 return;
             }
 
             ls.visibility = "visible";
 
-            const p = nearestPoint.lastPointerPos!;
+            const p = chart.nearestPoint.lastPointerPos!;
             const tooltipRect = this.tooltip.getBoundingClientRect();
             let left = p.x - tooltipRect.width - mouseOffset;
             let top = p.y - tooltipRect.height - mouseOffset;
@@ -106,8 +108,8 @@ td {
             // display X for the data point that is the closest to the pointer
             let minPointerDistance = Number.POSITIVE_INFINITY;
             let displayingX: number | null = null;
-            for (const [s, d] of nearestPoint.dataPoints) {
-                const px = model.pxPoint(d);
+            for (const [s, d] of chart.nearestPoint.dataPoints) {
+                const px = chart.model.pxPoint(d);
                 const dx = px.x - p.x;
                 const dy = px.y - p.y;
                 const dis = Math.sqrt(dx * dx + dy * dy);
@@ -116,13 +118,15 @@ td {
                     displayingX = d.x;
                 }
             }
-            this.xItem.value.textContent = displayingX!.toLocaleString();
 
-            for (const s of this.options.series) {
+            const xFormatter = options.xFormatter;
+            this.xItem.value.textContent = xFormatter(displayingX!);
+
+            for (const s of chart.options.series) {
                 if (!s.visible)
                     continue;
 
-                let point = nearestPoint.dataPoints.get(s);
+                let point = chart.nearestPoint.dataPoints.get(s);
                 let item = this.items.get(s);
                 if (item && point) {
                     item.value.textContent = point.y.toLocaleString();
@@ -152,7 +156,7 @@ td {
     }
 
     update() {
-        for (const s of this.options.series) {
+        for (const s of this.chartOptions.series) {
             if (!this.items.has(s)) {
                 const itemElements = this.createItemElements(s.name);
                 this.itemContainer.appendChild(itemElements.item);
@@ -160,14 +164,29 @@ td {
             }
 
             const item = this.items.get(s)!;
-            item.example.style.backgroundColor = (s.color ?? this.options.color).toString();
+            item.example.style.backgroundColor = (s.color ?? this.chartOptions.color).toString();
             item.item.style.display = s.visible ? "" : "none";
         }
     }
 }
 
-export const tooltip: TimeChartPlugin<Tooltip> = {
-    apply(chart) {
-        return new Tooltip(chart.el, chart.model, chart.options, chart.nearestPoint);
+const defaultOptions: TooltipOptions = {
+    enabled: false,
+    xLabel: "X",
+    xFormatter: x => x.toLocaleString(),
+};
+
+export class TimeChartTooltipPlugin implements TimeChartPlugin<Tooltip> {
+    options: TooltipOptions;
+    constructor(options?: Partial<TooltipOptions>) {
+        if (!options)
+            options = {};
+        if (!defaultOptions.isPrototypeOf(options))
+            Object.setPrototypeOf(options, defaultOptions);
+        this.options = options as TooltipOptions;
+    }
+
+    apply(chart: core) {
+        return new Tooltip(chart, this.options);
     }
 }

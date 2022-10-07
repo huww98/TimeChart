@@ -30,8 +30,6 @@ const defaultOptions = {
     debugWebGL: false,
     forceWebGL1: false,
     legend: true,
-    tooltip: false,
-    tooltipXLabel: "X"
 } as const;
 
 const defaultSeriesOptions = {

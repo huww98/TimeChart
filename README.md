@@ -236,14 +236,6 @@ from d3-scale are known to work.
 
   default: true
 
-* tooltip (boolean): If true, hovering tooltip is displayed
-
-  default: false
-
-* tooltipXLabel (string): Label for the X axis in the tooltip
-
-  default: "X"
-
 ### Series Options
 
 Specify these options in series option object. e.g. to specify `lineWidth`:
@@ -340,6 +332,38 @@ Then old `chart.options.chart` is not available. Use `chart.plugins.zoom.options
 * maxDomainExtent / minDomainExtent (number): Per axis. The limit of `max - min` in xRange / yRange
 
   default: Infinity / 0
+
+# Tooltip Options
+
+```JavaScript
+const chart = new TimeChart({
+    ...,
+    tooltip: { enabled: true }
+})
+```
+Or
+```JavaScript
+import TimeChart from 'timechart/core';
+import { TimeChartTooltipPlugin } from 'timechart/plugins/tooltip';
+const chart = new TimeChart(el, {
+    ...,
+    plugins: {
+        tooltip: new TimeChartTooltipPlugin({ enabled: true, xLabel: 'Time' })
+    },
+});
+```
+
+* enabled (boolean): Whether to enable the tooltip on hover
+
+  default: false
+
+* xLabel (string): Label for the X axis in the tooltip
+
+  default: "X"
+
+* xFormatter ((number) => string): Function to format the X axis value in the tooltip
+
+  default: x => x.toLocaleString()
 
 # Methods
 

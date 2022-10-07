@@ -32,6 +32,12 @@ interface ScaleBase {
     range(range: ReadonlyArray<number>): this;
 }
 
+export interface TooltipOptions {
+    enabled: boolean;
+    xLabel: string;
+    xFormatter: (x: number) => string;
+}
+
 interface TimeChartRenderOptions {
     pixelRatio: number;
     lineWidth: number;
@@ -49,8 +55,7 @@ interface TimeChartRenderOptions {
     renderPaddingBottom: number;
 
     legend: boolean;
-    tooltip: boolean;
-    tooltipXLabel: string;
+    tooltip: Partial<TooltipOptions>;
 
     xRange: { min: number | Date, max: number | Date } | 'auto' | null;
     yRange: { min: number, max: number } | 'auto' | null;

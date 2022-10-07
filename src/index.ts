@@ -6,7 +6,7 @@ import { d3Axis } from './plugins/d3Axis';
 import { legend } from './plugins/legend';
 import { lineChart } from './plugins/lineChart';
 import { nearestPoint } from './plugins/nearestPoint';
-import { tooltip } from './plugins/tooltip';
+import { TimeChartTooltipPlugin } from './plugins/tooltip';
 
 type TDefaultPlugins = {
     lineChart: typeof lineChart,
@@ -15,22 +15,22 @@ type TDefaultPlugins = {
     nearestPoint: typeof nearestPoint,
     legend: typeof legend,
     zoom: TimeChartZoomPlugin,
-    tooltip: typeof tooltip
+    tooltip: TimeChartTooltipPlugin,
 }
 
 function addDefaultPlugins<TPlugins extends TimeChartPlugins=NoPlugin>(options?: TimeChartOptions<TPlugins>): TimeChartOptions<TPlugins&TDefaultPlugins> {
-    const o = options ?? {plugins: undefined, zoom: undefined};
+    const o = options ?? {plugins: undefined, zoom: undefined, tooltip: undefined};
     return {
         ...options,
         plugins: {
-            ...(o.plugins ?? {}) as TPlugins,
             lineChart,
             d3Axis,
             crosshair,
             nearestPoint,
             legend,
             zoom: new TimeChartZoomPlugin(o.zoom),
-            tooltip
+            tooltip: new TimeChartTooltipPlugin(o.tooltip),
+            ...(o.plugins ?? {}) as TPlugins,
         }
     } as TimeChartOptions<TPlugins&TDefaultPlugins>;
 }
@@ -45,7 +45,7 @@ export default class TimeChart<TPlugins extends TimeChartPlugins=NoPlugin> exten
         nearestPoint,
         legend,
         TimeChartZoomPlugin,
-        tooltip
+        TimeChartTooltipPlugin,
     }
     static LineType = LineType;
 

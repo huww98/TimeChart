@@ -4,10 +4,11 @@ function main() {
     const el = document.getElementById('chart');
     const dataSin = [];
     const dataCos = [];
+    const baseTime = Date.now() - performance.now()
     const chart = new TimeChart(el, {
         // debugWebGL: true,
         // forceWebGL1: true,
-        baseTime: Date.now() - performance.now(),
+        baseTime,
         series: [
             {
                 name: 'Sin',
@@ -32,7 +33,10 @@ function main() {
                 minDomainExtent: 1,
             }
         },
-        tooltip: true,
+        tooltip: {
+            enabled: true,
+            xFormatter: (x) => new Date(x + baseTime).toLocaleString([], {hour: '2-digit', minute: '2-digit', second: '2-digit', fractionalSecondDigits: 3}),
+        },
     });
     const pointCountEl = document.getElementById('point-count');
 
@@ -63,7 +67,7 @@ function main() {
         chart.update();
     });
     document.getElementById('tooltip-btn').addEventListener('click', function () {
-        chart.options.tooltip = !chart.options.tooltip;
+        chart.options.tooltip.enabled = !chart.options.tooltip.enabled;
     });
 
     paddingDirs = ['Top', 'Right', 'Bottom', 'Left'];

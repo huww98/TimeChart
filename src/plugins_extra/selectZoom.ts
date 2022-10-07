@@ -21,9 +21,12 @@ export class SelectZoom {
     private visual: SVGRectElement;
     constructor(private readonly chart: core, public readonly options: SelectZoomOptions) {
         const el = chart.contentBoxDetector.node;
+        el.tabIndex = -1;
         el.addEventListener('pointerdown', ev => this.onMouseDown(ev), { signal: chart.model.abortController.signal });
         el.addEventListener('pointerup', ev => this.onMouseUp(ev), { signal: chart.model.abortController.signal });
         el.addEventListener('pointermove', ev => this.onMouseMove(ev), { signal: chart.model.abortController.signal });
+        el.addEventListener('pointercancel', ev => this.onPointerCancel(ev), { signal: chart.model.abortController.signal });
+        el.addEventListener('keydown', ev => this.onKeyDown(ev), { signal: chart.model.abortController.signal });
 
         const style = document.createElementNS("http://www.w3.org/2000/svg", "style");
         style.textContent = `
@@ -39,6 +42,11 @@ export class SelectZoom {
         this.visual = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
         this.visual.classList.add('timechart-selection');
         chart.svgLayer.svgNode.appendChild(this.visual);
+    }
+
+    onKeyDown(ev: KeyboardEvent) {
+        if (ev.code === 'Escape')
+            this.reset();
     }
 
     private start: {p: Point, id: number} | null = null;
@@ -145,6 +153,11 @@ export class SelectZoom {
             this.chart.model.requestRedraw();
 
         this.reset();
+    }
+
+    onPointerCancel(ev: PointerEvent) {
+        if (ev.pointerId === this.start?.id)
+            this.reset();
     }
 }
 

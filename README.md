@@ -333,7 +333,7 @@ Then old `chart.options.chart` is not available. Use `chart.plugins.zoom.options
 
   default: Infinity / 0
 
-# Tooltip Options
+### Tooltip Options
 
 ```JavaScript
 const chart = new TimeChart({

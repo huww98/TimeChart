@@ -96,6 +96,7 @@ const chart = new TimeChart(el, {
         crosshair,
         nearestPoint,
         zoom: new TimeChartZoomPlugin({...}),
+        tooltip: new TimeChartTooltipPlugin({...}),
     }
 });
 ```
@@ -365,7 +366,7 @@ const chart = new TimeChart(el, {
 
   default: x => x.toLocaleString()
 
-# Methods
+### Methods
 
 * `chart.update()`: Request update after some options have been changed. You can call this as many times as needed. The actual update will only happen once per frame.
 

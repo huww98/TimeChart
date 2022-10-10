@@ -13,10 +13,11 @@ const BUFFER_POINT_CAPACITY = BUFFER_TEXTURE_WIDTH * BUFFER_TEXTURE_HEIGHT;
 const BUFFER_INTERVAL_CAPACITY = BUFFER_POINT_CAPACITY - 2;
 
 class ShaderUniformData {
-    data = new ArrayBuffer(3 * 2 * 4);
+    data;
     ubo;
 
-    constructor(private gl: WebGL2RenderingContext) {
+    constructor(private gl: WebGL2RenderingContext, size: number) {
+        this.data = new ArrayBuffer(size);
         this.ubo = throwIfFalsy(gl.createBuffer());
         gl.bindBuffer(gl.UNIFORM_BUFFER, this.ubo);
         gl.bufferData(gl.UNIFORM_BUFFER, this.data, gl.DYNAMIC_DRAW);
@@ -393,7 +394,8 @@ export class LineChartRenderer {
         private gl: WebGL2RenderingContext,
         private options: ResolvedCoreOptions,
     ) {
-        this.uniformBuffer = new ShaderUniformData(this.gl);
+        const uboSize = gl.getActiveUniformBlockParameter(this.lineProgram.program, 0, gl.UNIFORM_BLOCK_DATA_SIZE);
+        this.uniformBuffer = new ShaderUniformData(this.gl, uboSize);
 
         model.updated.on(() => this.drawFrame());
         model.resized.on((w, h) => this.onResize(w, h));

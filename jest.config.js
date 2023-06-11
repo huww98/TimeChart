@@ -4,9 +4,7 @@ tsconfig.types.push('jest')
 module.exports = {
     preset: 'ts-jest',
     testEnvironment: 'node',
-    globals: {
-        'ts-jest': {
-            tsconfig
-        }
-    }
+    transform: {
+        '^.+\\.tsx?$': ['ts-jest', { tsconfig }],
+    },
 };

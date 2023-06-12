@@ -5,6 +5,8 @@ import terser from "@rollup/plugin-terser";
 
 import pkg from './package.json' assert {type: 'json'};
 
+const ts = typescript({ compilerOptions: {outDir: 'dist', declaration: false}})
+
 const config = {
     input: `src/index.ts`,
     output: [
@@ -34,7 +36,7 @@ const config = {
         include: 'src/**',
     },
     plugins: [
-        typescript(),
+        ts,
         commonjs(),
         resolve(),
     ],
@@ -68,7 +70,7 @@ const configPluginsExtra = {
         include: 'src/plugins_extra/**',
     },
     plugins: [
-        typescript(),
+        ts,
         commonjs(),
         resolve(),
     ],

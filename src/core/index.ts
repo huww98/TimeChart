@@ -38,6 +38,9 @@ const defaultSeriesOptions = {
     visible: true,
     lineType: LineType.Line,
     stepLocation: 1.,
+
+    xStep: 0,
+    xStepCorrection: true,
 } as const;
 
 type TPluginStates<TPlugins> = { [P in keyof TPlugins]: TPlugins[P] extends TimeChartPlugin<infer TState> ? TState : never };

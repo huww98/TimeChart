@@ -5,6 +5,8 @@ export interface SelectZoomOptions {
     mouseButtons: number;
     enableX: boolean;
     enableY: boolean;
+    thresholdX: number;
+    thresholdY: number;
     cancelOnSecondPointer: boolean;
 }
 
@@ -12,6 +14,8 @@ const defaultOptions = {
     mouseButtons: 1,
     enableX: true,
     enableY: true,
+    thresholdX: 0,
+    thresholdY: 0,
     cancelOnSecondPointer: false,
 } as const;
 
@@ -95,9 +99,12 @@ export class SelectZoom {
             return;
         const p = this.getPoint(ev);
 
-        if (this.options.enableX) {
-            const x = Math.min(this.start.p.x, p.x);
-            const w = Math.abs(this.start.p.x - p.x);
+        const x = Math.min(this.start.p.x, p.x);
+        const w = Math.abs(this.start.p.x - p.x);
+        const y = Math.min(this.start.p.y, p.y);
+        const h = Math.abs(this.start.p.y - p.y);
+
+        if (this.options.enableX && ((w >= h) || (w >= this.options.thresholdX))) {
             this.visual.x.baseVal.value = x;
             this.visual.width.baseVal.value = w;
         } else {
@@ -105,9 +112,7 @@ export class SelectZoom {
             this.visual.setAttribute('width', '100%');
         }
 
-        if (this.options.enableY) {
-            const y = Math.min(this.start.p.y, p.y);
-            const h = Math.abs(this.start.p.y - p.y);
+        if (this.options.enableY && ((h > w) || (h >= this.options.thresholdY))) {
             this.visual.y.baseVal.value = y;
             this.visual.height.baseVal.value = h;
         } else {
@@ -126,7 +131,7 @@ export class SelectZoom {
         if (this.options.enableX) {
             const x1 = Math.min(this.start.p.x, p.x);
             const x2 = Math.max(this.start.p.x, p.x);
-            if (x2 - x1 > 0) {
+            if (x2 - x1 > this.options.thresholdX) {
                 const newDomain = [
                     this.chart.model.xScale.invert(x1),
                     this.chart.model.xScale.invert(x2),
@@ -139,7 +144,7 @@ export class SelectZoom {
         if (this.options.enableY) {
             const y1 = Math.max(this.start.p.y, p.y);
             const y2 = Math.min(this.start.p.y, p.y);
-            if (y1 - y2 > 0) {
+            if (y1 - y2 > this.options.thresholdY) {
                 const newDomain = [
                     this.chart.model.yScale.invert(y1),
                     this.chart.model.yScale.invert(y2),

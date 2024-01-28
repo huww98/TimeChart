@@ -37,6 +37,9 @@ export class Tooltip {
 .item {
     user-select: none;
 }
+.out-of-range.item {
+    display: none;
+}
 td {
     padding: 0px 5px;
 }
@@ -128,9 +131,12 @@ td {
 
                 let point = chart.nearestPoint.dataPoints.get(s);
                 let item = this.items.get(s);
-                if (item && point) {
-                    item.value.textContent = point.y.toLocaleString();
-                    item.item.classList.toggle('x-not-aligned', point.x !== displayingX);
+                if (item) {
+                    item.item.classList.toggle('out-of-range', !point);
+                    if (point) {
+                        item.value.textContent = point.y.toLocaleString();
+                        item.item.classList.toggle('x-not-aligned', point.x !== displayingX);
+                    }
                 }
             }
         });

@@ -6,7 +6,8 @@ export class ChartZoomWheel {
     public scaleUpdated = new EventDispatcher();
 
     constructor(private el: CapableElement, private options: ResolvedOptions) {
-        el.addEventListener('wheel', ev => this.onWheel(ev));
+        const eventEl = options.eventElement;
+        eventEl.addEventListener('wheel', ev => this.onWheel(ev));
     }
 
     private onWheel(event: WheelEvent) {

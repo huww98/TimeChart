@@ -13,10 +13,11 @@ export class ChartZoomTouch {
     };
 
     constructor(private el: CapableElement, private options: ResolvedOptions) {
-        el.addEventListener('touchstart', e => this.onTouchStart(e), { passive: true });
-        el.addEventListener('touchend', e => this.onTouchEnd(e), { passive: true });
-        el.addEventListener('touchcancel', e => this.onTouchEnd(e), { passive: true });
-        el.addEventListener('touchmove', e => this.onTouchMove(e), { passive: true });
+        const eventEl = options.eventElement;
+        eventEl.addEventListener('touchstart', e => this.onTouchStart(e), { passive: true });
+        eventEl.addEventListener('touchend', e => this.onTouchEnd(e), { passive: true });
+        eventEl.addEventListener('touchcancel', e => this.onTouchEnd(e), { passive: true });
+        eventEl.addEventListener('touchmove', e => this.onTouchMove(e), { passive: true });
 
         this.update();
     }

@@ -7,10 +7,11 @@ export class ChartZoomMouse {
     private previousPoint: Point | null = null;
 
     constructor(private el: CapableElement, private options: ResolvedOptions) {
-        el.style.userSelect = 'none';
-        el.addEventListener('pointerdown', ev => this.onMouseDown(ev));
-        el.addEventListener('pointerup', ev => this.onMouseUp(ev));
-        el.addEventListener('pointermove', ev => this.onMouseMove(ev));
+        const eventEl = options.eventElement;
+        eventEl.style.userSelect = 'none';
+        eventEl.addEventListener('pointerdown', ev => this.onMouseDown(ev));
+        eventEl.addEventListener('pointerup', ev => this.onMouseUp(ev));
+        eventEl.addEventListener('pointermove', ev => this.onMouseMove(ev));
     }
 
     private point(ev: MouseEvent) {
@@ -47,17 +48,19 @@ export class ChartZoomMouse {
             return;
         if ((event.buttons & this.options.panMouseButtons) === 0)
             return;
-        this.el.setPointerCapture(event.pointerId);
+        const eventEl = this.options.eventElement;
+        eventEl.setPointerCapture(event.pointerId);
         this.previousPoint = this.point(event);
-        this.el.style.cursor = 'grabbing';
+        eventEl.style.cursor = 'grabbing';
     }
 
     private onMouseUp(event: PointerEvent) {
         if (this.previousPoint === null) {
             return;
         }
+        const eventEl = this.options.eventElement;
         this.previousPoint = null
-        this.el.releasePointerCapture(event.pointerId);
-        this.el.style.cursor = '';
+        eventEl.releasePointerCapture(event.pointerId);
+        eventEl.style.cursor = '';
     }
 }

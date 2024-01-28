@@ -1,5 +1,4 @@
-import { ChartZoom, defaultAxisOptions, resolveOptions,  } from "../chartZoom";
-import { ResolvedOptions as ResolvedChartZoomOptions } from "../chartZoom/options";
+import { ChartZoom } from "../chartZoom";
 import core from "../core";
 import { MinMax } from "../core/renderModel";
 import { ResolvedZoomOptions, TimeChartPlugins, ZoomOptions } from "../options";
@@ -29,13 +28,8 @@ export class TimeChartZoom {
     }
 
     private registerZoom(chart: core<TimeChartPlugins>) {
-        if (this.options.x)
-            Object.setPrototypeOf(this.options.x, Object.assign(Object.create(defaults), { scale: chart.model.xScale }));
-        if (this.options.y)
-            Object.setPrototypeOf(this.options.y, Object.assign(Object.create(defaults), { scale: chart.model.yScale }));
-
-        const o = this.options as ResolvedZoomOptions & ResolvedChartZoomOptions;
-        const z = new ChartZoom(chart.contentBoxDetector.node, o);
+        const o = this.options;
+        const z = new ChartZoom(chart.el, o);
         chart.model.updated.on(() => {
             this.applyAutoRange(o.x, chart.model.xRange);
             this.applyAutoRange(o.y, chart.model.yRange);
@@ -50,17 +44,47 @@ export class TimeChartZoom {
     }
 }
 
-const defaults = Object.assign(Object.create(defaultAxisOptions) as typeof defaultAxisOptions, {
+const defaults = {
     autoRange: true,
-} as const);
+} as const;
 
 export class TimeChartZoomPlugin implements TimeChartPlugin<TimeChartZoom> {
-    options: ResolvedZoomOptions;
-    constructor(o?: ZoomOptions) {
-        this.options = resolveOptions(defaults, o);
+    constructor(private options?: ZoomOptions) {
+    }
+
+    private resolveOptions(chart: core<TimeChartPlugins>): ResolvedZoomOptions {
+        const o = this.options ?? {};
+        return new Proxy(o, {
+            get: (target, prop) => {
+                switch (prop) {
+                    case 'x':
+                    case 'y':
+                        const op = target[prop];
+                        if (!op)
+                            return op;
+                        return new Proxy(op, {
+                            get: (target, prop2) => {
+                                if (prop2 === 'scale') {
+                                    switch (prop) {
+                                        case 'x':
+                                            return chart.model.xScale;
+                                        case 'y':
+                                            return chart.model.yScale;
+                                    }
+                                }
+                                return (target as any)[prop2] ?? (defaults as any)[prop2];
+                            }
+                        })
+                    case 'eventElement':
+                        return chart.contentBoxDetector.node;
+                    default:
+                        return (target as any)[prop];
+                }
+            }
+        }) as ResolvedZoomOptions;
     }
 
     apply(chart: core<TimeChartPlugins>) {
-        return new TimeChartZoom(chart, this.options);
+        return new TimeChartZoom(chart, this.resolveOptions(chart));
     }
 }

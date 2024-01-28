@@ -16,22 +16,6 @@ export const defaultOptions = {
     touchMinPoints: 1,
 } as const;
 
-type WithDefaults<T, TDefault> = {x?: T&TDefault, y?: T&TDefault} & typeof defaultOptions;
-
-export function resolveOptions<T, TDefault extends Object>(defaults: TDefault, o?: {x?: T, y?: T}): WithDefaults<T, TDefault> {
-    if (!o)
-        o = {}
-    if (!defaultOptions.isPrototypeOf(o))
-        Object.setPrototypeOf(o, defaultOptions);
-    const resolveAxis = (ao?: T) => {
-        if (ao && !defaults.isPrototypeOf(ao))
-            Object.setPrototypeOf(ao, defaults);
-    }
-    resolveAxis(o.x);
-    resolveAxis(o.y);
-    return o as WithDefaults<T, TDefault>;
-}
-
 export class ChartZoom {
     options: ResolvedOptions;
     private touch: ChartZoomTouch;
@@ -41,7 +25,24 @@ export class ChartZoom {
 
     constructor(el: CapableElement, options?: ChartZoomOptions) {
         options = options ?? {};
-        this.options = resolveOptions(defaultAxisOptions, options);
+        this.options = new Proxy(options, {
+            get(target, prop) {
+                if (prop === 'x' || prop === 'y') {
+                    const op = target[prop];
+                    if (!op)
+                        return op;
+                    return new Proxy(op, {
+                        get(target, prop) {
+                            return (target as any)[prop] ?? (defaultAxisOptions as any)[prop];
+                        }
+                    })
+                }
+                if (prop === 'eventElement') {
+                    return target[prop] ?? el;
+                }
+                return (target as any)[prop] ?? (defaultOptions as any)[prop];
+            }
+        }) as ResolvedOptions;
 
         this.touch = new ChartZoomTouch(el, this.options);
         this.mouse = new ChartZoomMouse(el, this.options);

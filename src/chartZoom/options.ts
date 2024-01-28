@@ -30,6 +30,7 @@ export interface ResolvedOptions {
     y?: ResolvedAxisOptions;
     panMouseButtons: number;
     touchMinPoints: number;
+    eventElement: CapableElement;
 }
 
 export interface ChartZoomOptions {
@@ -37,6 +38,7 @@ export interface ChartZoomOptions {
     y?: AxisOptions;
     panMouseButtons?: number;
     touchMinPoints?: number;
+    eventElement?: CapableElement;
 }
 
 export interface CapableElement extends Element, ElementCSSInlineStyle {

@@ -107,6 +107,18 @@ export interface TimeChartSeriesOptions {
     visible: boolean;
     lineType: LineType;
     stepLocation: number;
+
+    /**
+     * The expected interval of adjacent x values. Set this for higher WebGL rendering accuracy.
+     * @default 0
+     */
+    xStep: number;
+    /**
+     * Whether to correct xStep to match the actual interval when a segment is fully filled.
+     * @default true
+     * @see xStep
+     */
+    xStepCorrection: boolean;
 }
 
 export function resolveColorRGBA(color: ColorSpecifier): [number, number, number, number] {

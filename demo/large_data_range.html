@@ -8,6 +8,7 @@
 </head>
 <body>
     <p>Test if we have precision issue with very large X</p>
+    <p>Segment 1 starts from 3685 June 13th 9AM</p>
     <div id="chart" style="width: 100%; height: 640px;"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/d3-array@3"></script>
@@ -40,7 +41,7 @@
         const chart = new TimeChart(el, {
             baseTime: Date.now(),
             series: [
-                { name: 'Line 1', data: data, color: 'blue' },
+                { name: 'Line 1', data: data, color: 'blue', xStep: timeStep },
             ],
             zoom: { x: { autoRange: true } },
             tooltip: { enabled: true },
